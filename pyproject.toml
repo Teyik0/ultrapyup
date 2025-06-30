@@ -1,0 +1,18 @@
+[project]
+name = "ultrapy"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
+requires-python = ">=3.12"
+dependencies = ["typer>=0.16.0"]
+
+[dependency-groups]
+dev = ["ruff>=0.12.1"]
+
+[project.scripts]
+ultrapy = "ultrapy:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
