@@ -1,0 +1,19 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      run: uvx run ruff format .
+      glob: "*.{py}"
+
+    - name: lint
+      run: uv run ruff check --fix .
+      glob: "*.{py}"
+
+    - name: typecheck
+      run: uv run ty check .
+      glob: "*.{py}"
+
+commit-msg:
+  jobs:
+    - name: check
+      run: uv run commitlint {1}

@@ -1,0 +1,1 @@
+extend = "src/ultrapy/resources/ruff_base.toml"

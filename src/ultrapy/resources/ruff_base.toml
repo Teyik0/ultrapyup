@@ -1,0 +1,116 @@
+# Same as Black formatting standards
+line-length = 88
+indent-width = 4
+
+# Target Python 3.9+ for broad compatibility
+target-version = "py39"
+
+# Exclude common directories that shouldn't be linted
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[lint]
+select = [
+    # pycodestyle errors and warnings
+    "E",
+    # pycodestyle warnings
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade - modernize Python code
+    "UP",
+    # flake8-bugbear - catch likely bugs
+    "B",
+    # flake8-simplify - suggest simpler alternatives
+    "SIM",
+    # isort - import sorting
+    "I",
+    # flake8-comprehensions - better list/dict comprehensions
+    "C4",
+    # flake8-pie - misc linting rules
+    "PIE",
+    # flake8-return - improve return statements
+    "RET",
+    # Perflint - performance anti-patterns
+    "PERF",
+    # Ruff-specific rules
+    "RUF",
+]
+
+ignore = [
+    # Allow line length violations (handled by formatter)
+    "E501",
+    # Allow lambda assignments (sometimes useful)
+    "E731",
+    # Allow relative imports in tests
+    "TID252",
+]
+
+# Allow fix for all enabled rules when --fix is provided
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[lint.per-file-ignores]
+# Test files can be more flexible
+"tests/**/*.py" = [
+    "S101",    # Allow assert statements
+    "PLR2004", # Allow magic values in tests
+    "SLF001",  # Allow private member access
+]
+
+# Configuration files can use exec
+"**/settings/*.py" = ["S102"]
+"**/config/*.py" = ["S102"]
+
+[lint.isort]
+# Organize imports cleanly
+force-single-line = false
+lines-after-imports = 2
+
+[lint.mccabe]
+# Complexity threshold
+max-complexity = 10
+
+[lint.pydocstyle]
+# Use Google-style docstrings
+convention = "google"
+
+[format]
+# Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Enable docstring formatting (opt-in)
+docstring-code-format = true
+docstring-code-line-length = "dynamic"

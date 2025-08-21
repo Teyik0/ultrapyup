@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: format
+        entry: uv run ruff format .
+        language: system
+        files: \.py$
+        pass_filenames: false
+
+      - id: lint
+        name: lint
+        entry: uv run ruff check --fix .
+        language: system
+        files: \.py$
+        pass_filenames: false
+
+      - id: typecheck
+        name: typecheck
+        entry: uv run ty check .
+        language: system
+        files: \.py$
+        pass_filenames: false
+
+      - id: commitlint
+        name: check
+        entry: uv run commitlint
+        language: system
+        stages: [commit-msg]
+        pass_filenames: false

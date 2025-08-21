@@ -1,18 +1,26 @@
 [project]
 name = "ultrapy"
 version = "0.1.0"
-description = "Add your description here"
+description = "A tool to empower your Python projects"
 readme = "README.md"
 authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
-requires-python = ">=3.12"
-dependencies = ["typer>=0.16.0"]
+requires-python = ">=3.10"
+dependencies = ["inquirerpy>=0.3.4", "toml>=0.10.2", "typer>=0.16.0"]
 
 [dependency-groups]
-dev = ["ruff>=0.12.1"]
+dev = [
+    "commitlint>=1.3.0",
+    "lefthook>=1.12.2",
+    "ruff>=0.12.1",
+    "ty>=0.0.1a19",
+]
 
 [project.scripts]
-ultrapy = "ultrapy:main"
+ultrapy = "ultrapy:app"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.8.0,<0.9"]
+build-backend = "uv_build"
+
+[tool.uv.workspace]
+members = ["examples/ultrapy-test"]
