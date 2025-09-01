@@ -72,8 +72,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.new_version }}
-          name: Release v${{ steps.bump_version.outputs.new_version }}
+          tag_name: ${{ steps.bump_version.outputs.new_version }}
+          name: ${{ steps.bump_version.outputs.new_version }}
           draft: false
           prerelease: false
           files: dist/*
@@ -83,8 +83,8 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.new_version }}-beta
-          name: v${{ steps.bump_version.outputs.new_version }}-beta
+          tag_name: ${{ steps.bump_version.outputs.new_version }}-beta
+          name: ${{ steps.bump_version.outputs.new_version }}-beta
           draft: false
           prerelease: true
           files: dist/*
