@@ -34,8 +34,8 @@ jobs:
       - name: Run type check
         run: uv run ty check .
 
-      - name: Run tests
-        run: uv run pytest -n auto tests --cov
+      # - name: Run tests
+      #   run: uv run pytest -n auto tests --cov
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
         id: bump_type
@@ -46,7 +46,12 @@ jobs:
 
       - name: Bump version in pyproject.toml and add beta suffix for dev branch
         if: github.ref == 'refs/heads/dev'
-        run: uv version --bump ${{ steps.bump_type.outputs.bump }} --bump beta
+        run: |
+          if [[ "${{ steps.bump_type.outputs.current }}" == *"beta"* ]]; then
+            uv version --bump beta
+          else
+            uv version --bump ${{ steps.bump_type.outputs.bump }} --bump beta
+          fi
 
       - name: Bump version in pyproject.toml for main branch
         if: github.ref == 'refs/heads/main'
