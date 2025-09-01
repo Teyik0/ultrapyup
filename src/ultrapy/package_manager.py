@@ -193,47 +193,35 @@ def ruff_config_setup():
     # Detect Python version in .venv
     venv_lib_path = Path(".venv/lib")
     if not venv_lib_path.exists():
-        log.info("No .venv/lib directory found")
+        log.info("No .venv/lib directory found, initialize your venv first")
         return
 
     # Find python* directory in .venv/lib
     python_dirs = list(venv_lib_path.glob("python*"))
     if not python_dirs:
-        log.info("No Python version directory found in .venv/lib")
+        log.info(
+            "No Python version directory found in .venv/lib, initialize your venv first"
+        )
         return
 
     python_version_dir = python_dirs[0].name  # Take first match (should only be one)
 
-    # Use exact path to ultrapy's base configuration in .venv
     base_config_path = (
         f".venv/lib/{python_version_dir}/site-packages/ultrapy/resources/ruff_base.toml"
     )
 
-    # Read the current file content
-    current_content = pyproject_path.read_text()
+    # Update or add Ruff configuration using toml library
+    with open(pyproject_path) as f:
+        config = toml.load(f)
 
-    if ruff_exists:
-        # Replace existing [tool.ruff] section
-        import re
+        if "tool" not in config:
+            config["tool"] = {}
 
-        # Pattern to match [tool.ruff] section and everything until next [section]
-        pattern = r"\[tool\.ruff\].*?(?=\n\[|\Z)"
-        updated_content = re.sub(
-            pattern,
-            f'[tool.ruff]\nextend = "{base_config_path}"',
-            current_content,
-            flags=re.DOTALL,
-        )
-    else:
-        # Append to the file
-        ruff_config = f"""
-[tool.ruff]
-extend = "{base_config_path}"
-"""
-        updated_content = current_content + ruff_config
+        config["tool"]["ruff"] = {"extend": base_config_path}
 
-    pyproject_path.write_text(updated_content)
+    with open(pyproject_path, "w") as f:
+        toml.dump(config, f)
 
     log.title("Ruff configuration setup completed")
-    action = "Overrode" if ruff_exists else "Added"
+    action = "Override" if ruff_exists else "Added"
     log.info(f"{action} Ruff config in pyproject.toml (extends {base_config_path})")

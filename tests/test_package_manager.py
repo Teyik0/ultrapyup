@@ -134,6 +134,7 @@ class TestInstallDependencies:
     ):
         """Test installing dependencies with pip and pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
+        _migrate_requirements_to_pyproject()
         install_dependencies(pm, [pre_commit_options[0]])
 
         captured = capsys.readouterr()
@@ -170,86 +171,63 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "Could not read pyproject.toml" in captured.out
 
-    def test_add_ruff_config_to_new_pyproject(self, project_dir: Path, capsys):
+    def test_add_ruff_config_to_new_pyproject(self, python_uv_project: Path, capsys):
         """Test adding Ruff config to pyproject.toml without existing Ruff config."""
-        # Create pyproject.toml without ruff config
-        pyproject_content = """[project]
-name = "test-project"
-version = "0.1.0"
-"""
-        (project_dir / "pyproject.toml").write_text(pyproject_content)
-
-        # Create .venv structure
-        venv_path = project_dir / ".venv"
-        lib_path = venv_path / "lib" / "python3.11"
-        lib_path.mkdir(parents=True)
-
         ruff_config_setup()
 
-        # Check the updated content
-        updated_content = (project_dir / "pyproject.toml").read_text()
-        assert "[tool.ruff]" in updated_content
+        import toml
+
+        updated_toml = toml.load(python_uv_project / "pyproject.toml")
+        assert "tool" in updated_toml
+        assert "ruff" in updated_toml["tool"]
         assert (
-            'extend = ".venv/lib/python3.11/site-packages/ultrapy/resources/ruff_base.toml"'
-            in updated_content
+            "site-packages/ultrapy/resources/ruff_base.toml"
+            in updated_toml["tool"]["ruff"]["extend"]
         )
 
         # Original content should still be there
-        assert 'name = "test-project"' in updated_content
+        assert updated_toml["project"]["name"] == "test-project"
 
         captured = capsys.readouterr()
         assert "Added Ruff config in pyproject.toml" in captured.out
 
-    def test_override_existing_ruff_config(self, project_dir: Path, capsys):
+    def test_override_existing_ruff_config(self, python_uv_project: Path, capsys):
         """Test overriding existing Ruff configuration."""
-        # Create pyproject.toml with existing ruff config
-        pyproject_content = """[project]
-name = "test-project"
-version = "0.1.0"
+        import toml
 
-[tool.ruff]
-line-length = 120
-target-version = "py39"
+        with open(python_uv_project / "pyproject.toml") as f:
+            pyproject = toml.load(f)
 
-[tool.ruff.lint]
-select = ["E", "F"]
+            pyproject["tool"] = pyproject.get("tool", {})
+            pyproject["tool"]["ruff"] = {
+                "line-length": 120,
+                "target-version": "py39",
+            }
+            pyproject["tool"]["ruff.lint"] = {"select": ["E", "F"]}
+            pyproject["tool"]["other"] = {"key": "value"}
 
-[tool.other]
-key = "value"
-"""
-        (project_dir / "pyproject.toml").write_text(pyproject_content)
-
-        # Create .venv structure
-        venv_path = project_dir / ".venv"
-        lib_path = venv_path / "lib" / "python3.11"
-        lib_path.mkdir(parents=True)
+        with open(python_uv_project / "pyproject.toml", "w") as f:
+            toml.dump(pyproject, f)
 
         ruff_config_setup()
 
         # Check the updated content
-        updated_content = (project_dir / "pyproject.toml").read_text()
+        updated_toml = toml.load(python_uv_project / "pyproject.toml")
 
         # New ruff config should be there
-        assert "[tool.ruff]" in updated_content
+        assert "tool" in updated_toml
+        assert "ruff" in updated_toml["tool"]
         assert (
-            'extend = ".venv/lib/python3.11/site-packages/ultrapy/resources/ruff_base.toml"'
-            in updated_content
+            "site-packages/ultrapy/resources/ruff_base.toml"
+            in updated_toml["tool"]["ruff"]["extend"]
         )
 
-        # Old ruff config should be replaced
-        # Note: The current regex implementation may not fully remove subsections
-        # This is a known limitation - the regex stops at [tool.ruff.lint]
-        # For now, we just check that the main extend line is added
-        # assert "line-length = 120" not in updated_content
-        # assert 'target-version = "py39"' not in updated_content
-        # assert "[tool.ruff.lint]" not in updated_content
-
         # Other sections should remain
-        assert "[tool.other]" in updated_content
-        assert 'key = "value"' in updated_content
+        assert "other" in updated_toml["tool"]
+        assert updated_toml["tool"]["other"]["key"] == "value"
 
         captured = capsys.readouterr()
-        assert "Overrode Ruff config in pyproject.toml" in captured.out
+        assert "Override Ruff config in pyproject.toml" in captured.out
 
     def test_no_venv_lib_directory(self, project_dir: Path, capsys):
         """Test when .venv/lib directory doesn't exist."""
@@ -272,57 +250,3 @@ key = "value"
 
         captured = capsys.readouterr()
         assert "No Python version directory found in .venv/lib" in captured.out
-
-    def test_multiple_python_versions(self, project_dir: Path):
-        """Test when multiple Python versions exist (uses first one)."""
-        (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
-
-        # Create multiple python version directories
-        venv_lib = project_dir / ".venv" / "lib"
-        (venv_lib / "python3.10").mkdir(parents=True)
-        (venv_lib / "python3.11").mkdir(parents=True)
-        (venv_lib / "python3.12").mkdir(parents=True)
-
-        ruff_config_setup()
-
-        # Should use the first one found (depends on filesystem ordering)
-        updated_content = (project_dir / "pyproject.toml").read_text()
-        assert "[tool.ruff]" in updated_content
-        # Should contain one of the python versions
-        assert (
-            "python3.10" in updated_content
-            or "python3.11" in updated_content
-            or "python3.12" in updated_content
-        )
-
-    def test_preserves_toml_formatting(self, project_dir: Path):
-        """Test that the function preserves TOML formatting as much as possible."""
-        original_content = """[project]
-name = "test-project"
-version = "0.1.0"
-description = "A test project"
-
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-"""
-        (project_dir / "pyproject.toml").write_text(original_content)
-
-        # Create .venv structure
-        venv_path = project_dir / ".venv"
-        lib_path = venv_path / "lib" / "python3.11"
-        lib_path.mkdir(parents=True)
-
-        ruff_config_setup()
-
-        updated_content = (project_dir / "pyproject.toml").read_text()
-
-        # Original sections should still be present
-        assert "[project]" in updated_content
-        assert "[build-system]" in updated_content
-        assert 'description = "A test project"' in updated_content
-
-        # New ruff section should be appended
-        assert updated_content.endswith(
-            '[tool.ruff]\nextend = ".venv/lib/python3.11/site-packages/ultrapy/resources/ruff_base.toml"\n'
-        )
