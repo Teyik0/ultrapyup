@@ -1,0 +1,35 @@
+name: Ultrapy - CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          version: "0.8.14"
+
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run ruff check
+        run: uv run ruff check --output-format=github .
+
+      - name: Run type check
+        run: uv run ty check .
+
+      - name: Run tests
+        run: uv run pytest tests --cov
