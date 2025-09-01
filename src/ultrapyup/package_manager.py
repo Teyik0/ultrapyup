@@ -73,6 +73,15 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
 
     # Fetch latest versions from PyPI for each dependency
     latest_versions = {}
+
+    def get_latest_version(lines: list[str]):
+        versions_line = lines[1].split("Available versions:")[1].strip()
+        if versions_line:
+            # Get the first (latest) version
+            latest_version = versions_line.split(",")[0].strip()
+            latest_versions[dep] = latest_version
+            return
+
     for dep in dev_deps:
         result = subprocess.run(
             f"{pip_cmd} index versions {dep}",
@@ -82,14 +91,19 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
         )
         if result.returncode == 0:
             lines = result.stdout.strip().split("\n")
-            versions_line = lines[1].split("Available versions:")[1].strip()
-            if versions_line:
-                # Get the first (latest) version
-                latest_version = versions_line.split(",")[0].strip()
-                latest_versions[dep] = latest_version
-                break
+            get_latest_version(lines)
         else:
-            latest_versions[dep] = "*"
+            result = subprocess.run(
+                f"{pip_cmd} index versions {dep} --pre",
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                get_latest_version(lines)
+            else:
+                latest_versions[dep] = "*"
 
     # Update pyproject.toml with dev dependencies using toml library
     pyproject_path = Path("pyproject.toml")
@@ -111,38 +125,49 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
             )
             existing_packages.add(package_name)
 
-        merged_dev_deps = []
-
-        for dep_spec in existing_dev_deps:
-            package_name = (
-                dep_spec.split("==")[0]
-                .split(">=")[0]
-                .split("<=")[0]
-                .split("~=")[0]
-                .split("!=")[0]
-                .strip()
-            )
-            if package_name not in dev_deps:
-                merged_dev_deps.append(dep_spec)
-
+        # Only add NEW packages from dev_deps
         for dep in dev_deps:
-            version = latest_versions.get(dep, "*")
-            if version != "*":
-                merged_dev_deps.append(f"{dep}=={version}")
-            else:
-                merged_dev_deps.append(dep)
+            if dep not in existing_packages:  # Only if it doesn't already exist
+                version = latest_versions.get(dep, "*")
+                if version != "*":
+                    existing_dev_deps.append(f"{dep}>={version}")
+                else:
+                    existing_dev_deps.append(dep)
 
-        config["dependency-groups"]["dev"] = merged_dev_deps
+        config["dependency-groups"]["dev"] = existing_dev_deps
 
     with open(pyproject_path, "w") as f:
         toml.dump(config, f)
 
     result = subprocess.run(
-        f"{pip_cmd} install -e .",
+        f"{pip_cmd} install --upgrade pip",
         shell=True,
+        capture_output=True,
     )
     if result.returncode != 0:
-        log.info(f"pip install -e . failed with return code {result.returncode}")
+        raise RuntimeError(
+            f"Failed to upgrade pip: {result.stderr.decode() if result.stderr else 'Unknown error'}"
+        )
+
+    result = subprocess.run(
+        f"{pip_cmd} install .",
+        shell=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to install package: {result.stderr.decode() if result.stderr else 'Unknown error'}"
+        )
+
+    result = subprocess.run(
+        f"{pip_cmd} install --group dev",
+        shell=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to install dev dependencies: {result.stderr.decode() if result.stderr else 'Unknown error'}"
+        )
 
 
 def install_dependencies(

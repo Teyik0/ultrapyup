@@ -72,7 +72,7 @@ def project_with_requirements(python_empty_project: Path) -> Path:
 requests==2.31.0
 pytest>=7.0.0
 # Comment line
-black==23.0.0
+tqdm>=4.67.1
 
 # Empty lines above and below
 

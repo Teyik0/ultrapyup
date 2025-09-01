@@ -123,13 +123,17 @@ class TestInstallDependencies:
         assert "ruff, ty, ultrapyup" in captured.out
 
         pyproject_path = project_with_requirements / "pyproject.toml"
-        pyproject = pyproject_path.read_text()
+        pyproject_data = toml.load(pyproject_path)
 
-        assert "ruff" in pyproject
-        assert "ty" in pyproject
-        assert "requests" in pyproject
-        assert "pytest" in pyproject
-        assert "black" in pyproject
+        dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+        dev_dependencies = pyproject_data.get("dependency-groups", {}).get("dev", [])
+
+        assert any("ruff>=" in dep for dep in dev_dependencies)
+        assert any("ty>=" in dep for dep in dev_dependencies)
+        assert any("ultrapyup>=" in dep for dep in dev_dependencies)
+        assert any("requests==" in dep for dep in dependencies)
+        assert any("pytest>=" in dep for dep in dependencies)
+        assert any("tqdm>=" in dep for dep in dependencies)
 
     def test_install_with_pip_and_precommit(
         self, project_with_requirements: Path, capsys
@@ -144,14 +148,18 @@ class TestInstallDependencies:
         assert "ruff, ty, ultrapyup, lefthook" in captured.out
 
         pyproject_path = project_with_requirements / "pyproject.toml"
-        pyproject = pyproject_path.read_text()
+        pyproject_data = toml.load(pyproject_path)
 
-        assert "ruff" in pyproject
-        assert "ty" in pyproject
-        assert "lefthook" in pyproject
-        assert "requests" in pyproject
-        assert "pytest" in pyproject
-        assert "black" in pyproject
+        dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+        dev_dependencies = pyproject_data.get("dependency-groups", {}).get("dev", [])
+
+        assert any("ruff>=" in dep for dep in dev_dependencies)
+        assert any("ty>=" in dep for dep in dev_dependencies)
+        assert any("ultrapyup>=" in dep for dep in dev_dependencies)
+        assert any("lefthook>=" in dep for dep in dev_dependencies)
+        assert any("requests==" in dep for dep in dependencies)
+        assert any("pytest>=" in dep for dep in dependencies)
+        assert any("tqdm>=" in dep for dep in dependencies)
 
 
 class TestRuffConfigSetup:

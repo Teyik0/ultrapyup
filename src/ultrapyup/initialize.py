@@ -28,18 +28,14 @@ def _migrate_requirements_to_pyproject() -> None:
 name = "your-project-name"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-{chr(10).join(f'    "{req}",' for req in requirements)}
+{chr(10).join(f'    "{req}",' for req in requirements if not any(keyword in req.lower() for keyword in ["ruff", "ty", "lefthook"]))}
 ]
-
-[build-system]
-requires = ["uv_build>=0.8.0,<0.9"]
-build-backend = "uv_build"
 """
 
     pyproject_path.write_text(pyproject_content)
+    requirements_path.unlink()
     log.title("📦 Migrated requirements.txt to pyproject.toml")
     log.info(f"Found {len(requirements)} dependencies")
     log.info("Please update project name and version in pyproject.toml")

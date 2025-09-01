@@ -13,6 +13,12 @@ pre-commit:
       run: uv run ty check .
       glob: "*.{py}"
 
+pre-push:
+  parallel: true
+  jobs:
+    - name: pytest
+      run: uv run pytest -n auto tests --cov
+
 commit-msg:
   jobs:
     - name: check

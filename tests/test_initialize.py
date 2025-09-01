@@ -42,7 +42,7 @@ class TestCheckPythonProject:
         content = pyproject_path.read_text()
         assert "requests==2.31.0" in content
         assert "pytest>=7.0.0" in content
-        assert "black==23.0.0" in content
+        assert "tqdm>=4.67.1" in content
         assert "ruff>=0.1.0" in content
 
     def test_with_pyproject_toml(self, python_uv_project: Path):
@@ -68,11 +68,9 @@ black==23.0.0"""
         assert pyproject_path.exists()
 
         content = pyproject_path.read_text()
-        assert '"requests==2.31.0"' in content
-        assert '"pytest>=7.0.0"' in content
-        assert '"black==23.0.0"' in content
-        assert "[build-system]" in content
-        assert "uv_build" in content
+        assert "requests==2.31.0" in content
+        assert "pytest>=7.0.0" in content
+        assert "black==23.0.0" in content
 
         captured = capsys.readouterr()
         assert "Migrated requirements.txt to pyproject.toml" in captured.out
