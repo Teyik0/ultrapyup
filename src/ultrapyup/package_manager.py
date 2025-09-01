@@ -5,8 +5,8 @@ from pathlib import Path
 import toml
 from InquirerPy import inquirer
 
-from ultrapy.pre_commit import PreCommitTool
-from ultrapy.utils import console, file_exist, log
+from ultrapyup.pre_commit import PreCommitTool
+from ultrapyup.utils import console, file_exist, log
 
 
 @dataclass

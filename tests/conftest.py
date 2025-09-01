@@ -128,7 +128,7 @@ select = ["E", "F", "I"]
 @pytest.fixture
 def mock_console():
     """Create a mock console for testing output."""
-    from ultrapy.utils import console
+    from ultrapyup.utils import console
 
     return console
 
@@ -136,6 +136,6 @@ def mock_console():
 @pytest.fixture
 def mock_log():
     """Create a mock log for testing output."""
-    from ultrapy.utils import log
+    from ultrapyup.utils import log
 
     return log

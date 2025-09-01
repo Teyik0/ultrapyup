@@ -3,7 +3,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from ultrapy.initialize import (
+from ultrapyup.initialize import (
     _check_python_project,
     _migrate_requirements_to_pyproject,
     initialize,

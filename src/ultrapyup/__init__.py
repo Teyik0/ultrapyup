@@ -2,8 +2,7 @@ from typing import Annotated
 
 import typer
 
-from ultrapy.initialize import initialize
-
+from ultrapyup.initialize import initialize
 
 app = typer.Typer(
     name="Ultrapy",

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from InquirerPy import inquirer
 
-from ultrapy.utils import log
+from ultrapyup.utils import log
 
 
 @dataclass

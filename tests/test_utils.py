@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ultrapy.utils import console, file_exist, log
+from ultrapyup.utils import console, file_exist, log
 
 
 class TestFileExist:

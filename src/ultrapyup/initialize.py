@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from ultrapy.editor import editor_setup, get_editors
-from ultrapy.package_manager import (
+from ultrapyup.editor import editor_setup, get_editors
+from ultrapyup.package_manager import (
     get_package_manager,
     install_dependencies,
     ruff_config_setup,
 )
-from ultrapy.pre_commit import get_precommit_tool, precommit_setup
-from ultrapy.utils import file_exist, log
+from ultrapyup.pre_commit import get_precommit_tool, precommit_setup
+from ultrapyup.utils import file_exist, log
 
 
 def _migrate_requirements_to_pyproject() -> None:

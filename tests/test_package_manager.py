@@ -1,14 +1,14 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from ultrapy.initialize import _migrate_requirements_to_pyproject
-from ultrapy.package_manager import (
+from ultrapyup.initialize import _migrate_requirements_to_pyproject
+from ultrapyup.package_manager import (
     PackageManager,
     get_package_manager,
     install_dependencies,
     ruff_config_setup,
 )
-from ultrapy.pre_commit import options as pre_commit_options
+from ultrapyup.pre_commit import options as pre_commit_options
 
 
 class TestGetPackageManager:

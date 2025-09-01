@@ -1,1 +1,1 @@
-extend = "src/ultrapy/resources/ruff_base.toml"
+extend = "src/ultrapyup/resources/ruff_base.toml"
