@@ -64,7 +64,7 @@ def install_dependencies(
         )
         log.title("Dependencies installed")
         log.info(
-            f"ruff, ty{', ' if pre_commit_tools else ''}{
+            f"ruff, ty, ultrapy{', ' if pre_commit_tools else ''}{
                 ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools)
                 if pre_commit_tools
                 else ''
@@ -91,9 +91,23 @@ def ruff_config_setup():
     # Check if Ruff configuration already exists
     ruff_exists = "tool" in config and "ruff" in config["tool"]
 
-    # Use relative path to ultrapy's base configuration in .venv
+    # Detect Python version in .venv
+    venv_lib_path = Path(".venv/lib")
+    if not venv_lib_path.exists():
+        log.info("No .venv/lib directory found")
+        return
+
+    # Find python* directory in .venv/lib
+    python_dirs = list(venv_lib_path.glob("python*"))
+    if not python_dirs:
+        log.info("No Python version directory found in .venv/lib")
+        return
+
+    python_version_dir = python_dirs[0].name  # Take first match (should only be one)
+
+    # Use exact path to ultrapy's base configuration in .venv
     base_config_path = (
-        ".venv/lib/python*/site-packages/ultrapy/resources/ruff_base.toml"
+        f".venv/lib/{python_version_dir}/site-packages/ultrapy/resources/ruff_base.toml"
     )
 
     # Read the current file content

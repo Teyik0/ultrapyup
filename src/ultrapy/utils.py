@@ -20,5 +20,7 @@ class Logger:
 log = Logger()
 
 
-def file_exist(path: Path):
+def file_exist(path: Path | str):
+    if isinstance(path, str):
+        path = Path(path)
     return path.exists()

@@ -4,3 +4,6 @@
 dist/
 
 examples
+.coverage
+htmlcov
+.pytest_cache

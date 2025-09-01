@@ -3,8 +3,10 @@
 ## init command
 
 ### Usage
+
 ```
-ultrapy init
+uvx ultrapy init
 ```
 
-1. check
+1. check if python project exist
+2. get package manager

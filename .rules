@@ -51,6 +51,7 @@ This document contains critical information about working with this codebase. Fo
    - Framework: `uv run pytest`
    - Async testing: use anyio, not asyncio
    - Coverage: test edge cases and errors
+   - Avoid use of patch and mocking, prefer use tempdir to create any necessary input file
    - New features require tests
    - Bug fixes require regression tests
 
@@ -95,6 +96,7 @@ This document contains critical information about working with this codebase. Fo
 - **Constants Over Functions**: Use constants where possible
 - **DRY Code**: Don't repeat yourself
 - **Functional Style**: Prefer functional, immutable approaches when not verbose
+- **Don't use try catch**: Never use try catch, instead use if else statements and raise error when needed
 - **Minimal Changes**: Only modify code related to the task at hand
 - **Function Ordering**: Define composing functions before their components
 - **TODO Comments**: Mark issues in existing code with "TODO:" prefix
