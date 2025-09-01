@@ -1,4 +1,4 @@
-name: CD
+name: Ultrapy - CD
 
 on:
   push:
@@ -61,3 +61,11 @@ jobs:
           prerelease: true
           files: dist/*
           generate_release_notes: true
+
+      - name: Push version changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add pyproject.toml
+          git commit -m "chore: bump version [skip ci]" || exit 0
+          git push

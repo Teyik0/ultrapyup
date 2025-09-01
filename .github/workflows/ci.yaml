@@ -2,7 +2,7 @@ name: Ultrapy - CI
 
 on:
   pull_request:
-    branches: [dev, main]
+    branches-ignore: [dev, main]
   workflow_call:
 
 jobs:
