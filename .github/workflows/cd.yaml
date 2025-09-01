@@ -34,8 +34,8 @@ jobs:
       - name: Run type check
         run: uv run ty check .
 
-      # - name: Run tests
-      #   run: uv run pytest -n auto tests --cov
+      - name: Run tests
+        run: uv run pytest -n auto tests --cov
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
         id: bump_type
