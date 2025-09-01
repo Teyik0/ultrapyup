@@ -8,7 +8,7 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/ci.yaml
+      - uses: ./.github/actions/ci
         with:
           fetch-depth: 0
 
