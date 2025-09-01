@@ -35,6 +35,8 @@ addopts = ["-v", "--tb=short", "--strict-markers", "--disable-warnings"]
 [tool.coverage.run]
 source = ["src/ultrapy"]
 branch = true
+parallel = true
+concurrency = ["multiprocessing"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -49,6 +51,7 @@ exclude_lines = [
 show_missing = true
 skip_covered = false
 precision = 2
+fail_under = 80
 
 [tool.coverage.html]
 directory = "htmlcov"
