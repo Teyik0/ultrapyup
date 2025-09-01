@@ -10,10 +10,26 @@ jobs:
     steps:
       - uses: ./.github/workflows/ci.yaml
 
-      - name: Add beta suffix for dev branch
-        id: bump_version
+      - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
+        id: bump_type
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          branch: ${{ github.ref_name }}
+
+      - name: Bump version in pyproject.toml and add beta suffix for dev branch
         if: ${{ github.ref }} == 'refs/heads/dev'
-        run: uv version --bump beta
+        run: uv version --bump ${{ steps.bump_type.outputs.bump }} --bump beta
+
+      - name: Bump version in pyproject.toml for main branch
+        if: ${{ github.ref }} == 'refs/heads/main'
+        run: uv version --bump ${{ steps.bump_type.outputs.bump }}
+
+      - name: Set next version
+        id: bump_version
+        run: |
+          BUMP_VERSION=$(uv version --short)
+          echo "new_version=$BUMP_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build package
         run: uv build
