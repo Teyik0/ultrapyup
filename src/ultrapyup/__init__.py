@@ -4,6 +4,7 @@ import typer
 
 from ultrapyup.initialize import initialize
 
+
 app = typer.Typer(
     name="Ultrapy",
     help="Ship code faster and with more confidence.",

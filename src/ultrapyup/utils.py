@@ -2,6 +2,7 @@ from pathlib import Path
 
 from rich.console import Console
 
+
 console = Console(log_time=False)
 
 
