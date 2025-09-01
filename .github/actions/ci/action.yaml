@@ -1,0 +1,41 @@
+name: "Ultrapy CI"
+
+description: "Run CI checks for Ultrapy project"
+inputs:
+  fetch-depth:
+    description: "Number of commits to fetch. 0 indicates all history for all branches and tags."
+    required: false
+    default: "1"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+        version: "0.8.14"
+
+    - name: Set up Python
+      run: uv python install
+      shell: bash
+
+    - name: Install the project
+      run: uv sync --locked --all-extras --dev
+      shell: bash
+
+    - name: Run ruff check
+      run: uv run ruff check --output-format=github .
+      shell: bash
+
+    - name: Run type check
+      run: uv run ty check .
+      shell: bash
+
+    - name: Run tests
+      run: uv run pytest -n auto tests --cov
+      shell: bash

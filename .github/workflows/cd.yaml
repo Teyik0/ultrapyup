@@ -6,9 +6,12 @@ on:
 
 jobs:
   cd:
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - uses: ./.github/workflows/ci.yaml
+        with:
+          fetch-depth: 0
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
         id: bump_type
