@@ -148,6 +148,21 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
 def install_dependencies(
     package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None
 ) -> None:
+    """
+    Install development dependencies using the selected package manager.
+    
+    By default this installs the dev tools ["ruff", "ty"]. If `pre_commit_tools` is provided,
+    each tool's value is appended to the dev dependency list. Shows an installation status
+    spinner, delegates the actual installation to the package-manager-specific helper
+    (_install_with_uv or _install_with_pip) based on package_manager.name, and logs a completion
+    title and a summary of the installed dev packages.
+    
+    Parameters:
+        package_manager (PackageManager): Chooses which installer implementation to run
+            (expects a PackageManager with a .name like "uv" or "pip").
+        pre_commit_tools (list[PreCommitTool] | None): Optional list of pre-commit tools whose
+            `.value` strings will be added to the dev dependency list.
+    """
     dev_deps = [
         "ruff",
         "ty",
@@ -172,7 +187,21 @@ def install_dependencies(
 
 
 def ruff_config_setup():
-    """Add Ruff configuration to pyproject.toml that extends the base configuration from local .venv ultrapyup installation."""
+    """
+    Add or update the project's Ruff configuration in pyproject.toml to extend the base Ruff config
+    shipped inside the local .venv ultrapyup package.
+    
+    This function:
+    - Exits early (and logs) if pyproject.toml is missing or cannot be read.
+    - Exits early (and logs) if a virtual environment under .venv/lib or a python* subdirectory is missing.
+    - Computes the base config path as ".venv/lib/{python_version_dir}/site-packages/ultrapyup/resources/ruff_base.toml".
+    - Ensures the TOML top-level [tool] table exists and sets tool.ruff = { "extend": "<base_config_path>" }.
+    - Overwrites pyproject.toml with the updated configuration and logs whether the Ruff section was added or overridden.
+    
+    Side effects:
+    - Reads and writes pyproject.toml in the current working directory.
+    - No value is returned.
+    """
     pyproject_path = Path.cwd() / "pyproject.toml"
 
     if not pyproject_path.exists():

@@ -14,6 +14,11 @@ app = typer.Typer(
 
 @app.command("init", help="Initialize Ultrapyup in the current directory")
 def init_command():
+    """
+    Initialize Ultrapyup in the current directory.
+    
+    Runs the package's project initialization routine (ultrapyup.initialize.initialize), creating any required configuration and scaffold files in the current working directory.
+    """
     initialize()
 
 

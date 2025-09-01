@@ -67,7 +67,21 @@ def python_empty_project(project_dir: Path) -> Path:
 
 @pytest.fixture
 def project_with_requirements(python_empty_project: Path) -> Path:
-    """Create a project with requirements.txt."""
+    """
+    Create a requirements.txt file inside the provided project directory and return that directory.
+    
+    The created requirements.txt contains pinned and ranged test dependencies plus comments and deliberate empty lines:
+    - requests==2.31.0
+    - pytest>=7.0.0
+    - black==23.0.0
+    - ruff>=0.1.0
+    
+    Parameters:
+        python_empty_project (Path): Path to the project directory where requirements.txt will be written.
+    
+    Returns:
+        Path: The same project directory passed in (updated with requirements.txt).
+    """
     requirements_content = """# Test requirements
 requests==2.31.0
 pytest>=7.0.0
@@ -85,7 +99,17 @@ ruff>=0.1.0
 
 @pytest.fixture
 def project_with_ruff_config(project_with_pyproject: Path) -> Path:
-    """Create a project with existing Ruff configuration in pyproject.toml."""
+    """
+    Prepare a project directory that includes a Ruff configuration in pyproject.toml and a simulated .venv with an Ultrapyup Ruff base config.
+    
+    Appends a [tool.ruff] and [tool.ruff.lint] block to the project's pyproject.toml, creates a `.venv/lib/python3.11/site-packages/ultrapyup/resources` directory tree, and writes a `ruff_base.toml` file into that resources directory.
+    
+    Parameters:
+        project_with_pyproject (Path): Path to an existing project directory that already contains a pyproject.toml file.
+    
+    Returns:
+        Path: The same project directory path passed in (project_with_pyproject).
+    """
     pyproject_path = project_with_pyproject / "pyproject.toml"
     pyproject_content = pyproject_path.read_text()
 
@@ -127,7 +151,14 @@ select = ["E", "F", "I"]
 
 @pytest.fixture
 def mock_console():
-    """Create a mock console for testing output."""
+    """
+    Return the shared testing console object from ultrapyup.utils.
+    
+    This fixture exposes the module-level `console` used by the codebase so tests can inspect or patch console output and behavior.
+    
+    Returns:
+        console: The `console` object imported from `ultrapyup.utils`.
+    """
     from ultrapyup.utils import console
 
     return console
@@ -135,7 +166,11 @@ def mock_console():
 
 @pytest.fixture
 def mock_log():
-    """Create a mock log for testing output."""
+    """
+    Return the package logger used by ultrapyup for tests.
+    
+    Provides the module-level `log` object from ultrapyup.utils so tests can assert, inspect, or patch logging output; this is the same logger instance used by the application.
+    """
     from ultrapyup.utils import log
 
     return log

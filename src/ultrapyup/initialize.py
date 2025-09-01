@@ -11,7 +11,15 @@ from ultrapyup.utils import file_exist, log
 
 
 def _migrate_requirements_to_pyproject() -> None:
-    """Migrate requirements.txt to pyproject.toml if needed."""
+    """
+    Migrate dependencies listed in requirements.txt into a new pyproject.toml file when appropriate.
+    
+    If a requirements.txt file exists and pyproject.toml does not, reads requirements.txt, ignores blank lines and comment lines (starting with '#'), and writes a basic pyproject.toml populated with those dependencies. Does nothing if requirements.txt is missing or pyproject.toml already exists.
+    
+    Side effects:
+    - Creates or overwrites pyproject.toml with a project template including the extracted dependencies.
+    - Emits informational logs about the migration and a reminder to update project name/version.
+    """
     requirements_path = Path("requirements.txt")
     pyproject_path = Path("pyproject.toml")
 
