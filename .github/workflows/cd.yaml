@@ -41,11 +41,11 @@ jobs:
           branch: ${{ github.ref_name }}
 
       - name: Bump version in pyproject.toml and add beta suffix for dev branch
-        if: ${{ github.ref }} == 'refs/heads/dev'
+        if: github.ref == 'refs/heads/dev'
         run: uv version --bump ${{ steps.bump_type.outputs.bump }} --bump beta
 
       - name: Bump version in pyproject.toml for main branch
-        if: ${{ github.ref }} == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: uv version --bump ${{ steps.bump_type.outputs.bump }}
 
       - name: Set next version
