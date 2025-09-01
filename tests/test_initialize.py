@@ -45,7 +45,7 @@ class TestCheckPythonProject:
         assert "black==23.0.0" in content
         assert "ruff>=0.1.0" in content
 
-    def test_with_pyproject_toml(self, project_with_pyproject: Path):
+    def test_with_pyproject_toml(self, python_uv_project: Path):
         """Test when pyproject.toml exists."""
         result = _check_python_project()
 
@@ -155,15 +155,12 @@ class TestInitialize:
             mock_inquirer.assert_not_called()
             assert result is None
 
-    def test_initialize_with_minimal_project(self, project_dir: Path, capsys):
+    def test_initialize_with_minimal_project(self, python_empty_project: Path, capsys):
         """Test initialize with a minimal Python project."""
-        # Create minimal project with .venv
-        venv_path = project_dir / ".venv"
-        lib_path = venv_path / "lib" / "python3.11" / "site-packages"
-        lib_path.mkdir(parents=True)
-
         # Create pyproject.toml to avoid migration
-        (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
+        (python_empty_project / "pyproject.toml").write_text(
+            "[project]\nname = 'test'\nversion = '0.1.0'\nrequires-python = '>=3.8'"
+        )
 
         # Only mock inquirer to control user choices
         with patch("InquirerPy.inquirer.select") as mock_inquirer:

@@ -84,25 +84,6 @@ ruff>=0.1.0
 
 
 @pytest.fixture
-def project_with_pyproject(python_project: Path) -> Path:
-    """Create a project with pyproject.toml and add requests and pytest using uv add."""
-    subprocess.run(
-        ["uv", "add", "requests"],
-        cwd=python_project,
-        capture_output=True,
-        check=True,
-    )
-
-    subprocess.run(
-        ["uv", "add", "requests", "--dev"],
-        cwd=python_project,
-        capture_output=True,
-        check=True,
-    )
-    return python_project
-
-
-@pytest.fixture
 def project_with_ruff_config(project_with_pyproject: Path) -> Path:
     """Create a project with existing Ruff configuration in pyproject.toml."""
     pyproject_path = project_with_pyproject / "pyproject.toml"
