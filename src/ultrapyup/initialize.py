@@ -5,6 +5,7 @@ from ultrapyup.package_manager import (
     get_package_manager,
     install_dependencies,
     ruff_config_setup,
+    ty_config_setup,
 )
 from ultrapyup.pre_commit import get_precommit_tool, precommit_setup
 from ultrapyup.utils import file_exist, log
@@ -78,6 +79,7 @@ def initialize():
     # Configure user's experience
     install_dependencies(package_manager, pre_commit_tools)
     ruff_config_setup()
+    ty_config_setup()
 
     if pre_commit_tools:
         for tool in pre_commit_tools:

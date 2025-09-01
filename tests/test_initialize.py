@@ -159,7 +159,7 @@ class TestInitialize:
         """Test initialize with a minimal Python project."""
         # Create pyproject.toml to avoid migration
         (python_empty_project / "pyproject.toml").write_text(
-            "[project]\nname = 'test'\nversion = '0.1.0'\nrequires-python = '>=3.8'"
+            "[project]\nname = 'test'\nversion = '0.1.0'\nrequires-python = '>=3.10'"
         )
 
         # Only mock inquirer to control user choices

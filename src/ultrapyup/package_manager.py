@@ -148,10 +148,7 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
 def install_dependencies(
     package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None
 ) -> None:
-    dev_deps = [
-        "ruff",
-        "ty",
-    ]
+    dev_deps = ["ruff", "ty", "ultrapyup"]
     if pre_commit_tools:
         dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
 
@@ -190,23 +187,38 @@ def ruff_config_setup():
     # Check if Ruff configuration already exists
     ruff_exists = "tool" in config and "ruff" in config["tool"]
 
-    # Detect Python version in .venv
-    venv_lib_path = Path(".venv/lib")
-    if not venv_lib_path.exists():
-        log.info("No .venv/lib directory found, initialize your venv first")
-        return
+    # Detect Python version in .venv - try cross-platform paths
+    site_packages_path = None
 
-    # Find python* directory in .venv/lib
-    python_dirs = list(venv_lib_path.glob("python*"))
-    if not python_dirs:
+    # Try Linux/macOS variants first
+    for lib_dir in [".venv/lib", ".venv/lib64"]:
+        venv_lib_path = Path(lib_dir)
+        if venv_lib_path.exists() and venv_lib_path.is_dir():
+            # Find python* directory (pythonX or pythonX.Y patterns)
+            python_dirs = list(venv_lib_path.glob("python*"))
+            for python_dir in python_dirs:
+                if python_dir.is_dir():
+                    candidate_path = python_dir / "site-packages"
+                    if candidate_path.exists() and candidate_path.is_dir():
+                        site_packages_path = candidate_path
+                        break
+        if site_packages_path:
+            break
+
+    # Try Windows variant if Linux/macOS paths not found
+    if not site_packages_path:
+        windows_path = Path(".venv/Lib/site-packages")
+        if windows_path.exists() and windows_path.is_dir():
+            site_packages_path = windows_path
+
+    # If no valid site-packages found, return with clear message
+    if not site_packages_path:
         log.info(
-            "No Python version directory found in .venv/lib, initialize your venv first"
+            "No virtualenv site-packages directory found. Please ensure your virtual environment is properly initialized."
         )
         return
 
-    python_version_dir = python_dirs[0].name  # Take first match (should only be one)
-
-    base_config_path = f".venv/lib/{python_version_dir}/site-packages/ultrapyup/resources/ruff_base.toml"
+    base_config_path = str(site_packages_path / "ultrapyup/resources/ruff_base.toml")
 
     # Update or add Ruff configuration using toml library
     with open(pyproject_path) as f:
@@ -223,3 +235,25 @@ def ruff_config_setup():
     log.title("Ruff configuration setup completed")
     action = "Override" if ruff_exists else "Added"
     log.info(f"{action} Ruff config in pyproject.toml (extends {base_config_path})")
+
+
+def ty_config_setup():
+    """Add Ty configuration to pyproject.toml with basic root configuration."""
+    pyproject_path = Path.cwd() / "pyproject.toml"
+
+    if not pyproject_path.exists():
+        log.info("No pyproject.toml found, skipping Ty configuration")
+        return
+
+    with open(pyproject_path) as f:
+        config = toml.load(f)
+        ty_exists = "tool" in config and "ty" in config["tool"]
+        if not ty_exists:
+            config["tool"]["ty"] = {"environment": {"root": ["./src"]}}
+
+    with open(pyproject_path, "w") as f:
+        toml.dump(config, f)
+
+    log.title("Ty configuration setup completed")
+    action = "Override" if ty_exists else "Added"
+    log.info(f"{action} Ty config in pyproject.toml with root=['./src']")

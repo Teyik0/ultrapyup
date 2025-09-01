@@ -3,6 +3,8 @@ name: Ultrapyup - CD
 on:
   push:
     branches: [main, dev]
+    paths-ignore:
+      - pyproject.toml
 
 jobs:
   cd:
@@ -54,6 +56,7 @@ jobs:
         id: bump_version
         run: |
           BUMP_VERSION=$(uv version --short)
+          echo "Next version: ${BUMP_VERSION}"
           echo "new_version=$BUMP_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build package
@@ -67,7 +70,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump_version.outputs.new_version }}
           name: Release v${{ steps.bump_version.outputs.new_version }}
@@ -78,7 +81,7 @@ jobs:
 
       - name: Create Beta Release
         if: github.ref == 'refs/heads/dev'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump_version.outputs.new_version }}
           name: Beta Release v${{ steps.bump_version.outputs.new_version }}
@@ -91,6 +94,6 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add pyproject.toml
+          git add pyproject.toml uv.lock
           git commit -m "chore: bump version [skip ci]" || exit 0
           git push

@@ -4,7 +4,7 @@ version = "0.1.0b1"
 description = "A tool to empower your Python projects"
 readme = "README.md"
 authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = ["inquirerpy>=0.3.4", "toml>=0.10.2", "typer>=0.16.0"]
 
 [dependency-groups]
@@ -24,6 +24,12 @@ ultrapyup = "ultrapyup:app"
 [build-system]
 requires = ["uv_build>=0.8.0,<0.9"]
 build-backend = "uv_build"
+
+[tool.ruff]
+extend = "src/ultrapyup/resources/ruff_base.toml"
+
+[tool.ty.environment]
+root = ["./src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

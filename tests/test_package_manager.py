@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import toml
+
 from ultrapyup.initialize import _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import (
     PackageManager,
@@ -236,7 +238,7 @@ class TestRuffConfigSetup:
         ruff_config_setup()
 
         captured = capsys.readouterr()
-        assert "No .venv/lib directory found" in captured.out
+        assert "No virtualenv site-packages directory found" in captured.out
 
     def test_no_python_version_in_venv(self, project_dir: Path, capsys):
         """Test when no python* directory exists in .venv/lib."""
@@ -249,4 +251,84 @@ class TestRuffConfigSetup:
         ruff_config_setup()
 
         captured = capsys.readouterr()
-        assert "No Python version directory found in .venv/lib" in captured.out
+        assert "No virtualenv site-packages directory found" in captured.out
+
+    def test_cross_platform_site_packages_detection(self, project_dir: Path, capsys):
+        """Test cross-platform site-packages detection."""
+        (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
+
+        # Test Linux/macOS path detection (.venv/lib/python3.x/site-packages)
+        linux_site_packages = (
+            project_dir
+            / ".venv"
+            / "lib"
+            / "python3.12"
+            / "site-packages"
+            / "ultrapyup"
+            / "resources"
+        )
+        linux_site_packages.mkdir(parents=True)
+        (linux_site_packages / "ruff_base.toml").write_text(
+            "[tool.ruff]\nline-length = 88"
+        )
+
+        ruff_config_setup()
+
+        # Verify config was created with Linux path
+        pyproject = toml.load(project_dir / "pyproject.toml")
+        assert "tool" in pyproject
+        assert "ruff" in pyproject["tool"]
+        assert "extend" in pyproject["tool"]["ruff"]
+        assert "lib/python3.12/site-packages" in pyproject["tool"]["ruff"]["extend"]
+
+        # Clean up for Windows test
+        import shutil
+
+        shutil.rmtree(project_dir / ".venv")
+        (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
+
+        # Test Windows path detection (.venv/Lib/site-packages)
+        windows_site_packages = (
+            project_dir / ".venv" / "Lib" / "site-packages" / "ultrapyup" / "resources"
+        )
+        windows_site_packages.mkdir(parents=True)
+        (windows_site_packages / "ruff_base.toml").write_text(
+            "[tool.ruff]\nline-length = 88"
+        )
+
+        ruff_config_setup()
+
+        # Verify config was created with Windows path
+        pyproject = toml.load(project_dir / "pyproject.toml")
+        assert "tool" in pyproject
+        assert "ruff" in pyproject["tool"]
+        assert "extend" in pyproject["tool"]["ruff"]
+        assert "Lib/site-packages" in pyproject["tool"]["ruff"]["extend"]
+
+    def test_lib64_detection(self, project_dir: Path, capsys):
+        """Test lib64 path detection for some Linux distributions."""
+        (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
+
+        # Test lib64 path detection (.venv/lib64/python3.x/site-packages)
+        lib64_site_packages = (
+            project_dir
+            / ".venv"
+            / "lib64"
+            / "python3.11"
+            / "site-packages"
+            / "ultrapyup"
+            / "resources"
+        )
+        lib64_site_packages.mkdir(parents=True)
+        (lib64_site_packages / "ruff_base.toml").write_text(
+            "[tool.ruff]\nline-length = 88"
+        )
+
+        ruff_config_setup()
+
+        # Verify config was created with lib64 path
+        pyproject = toml.load(project_dir / "pyproject.toml")
+        assert "tool" in pyproject
+        assert "ruff" in pyproject["tool"]
+        assert "extend" in pyproject["tool"]["ruff"]
+        assert "lib64/python3.11/site-packages" in pyproject["tool"]["ruff"]["extend"]
