@@ -13,6 +13,7 @@ dev = [
     "lefthook>=1.12.2",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.12.1",
     "ty>=0.0.1a19",
 ]

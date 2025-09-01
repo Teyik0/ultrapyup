@@ -134,7 +134,6 @@ class TestInstallDependencies:
     ):
         """Test installing dependencies with pip and pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
-        _migrate_requirements_to_pyproject()
         install_dependencies(pm, [pre_commit_options[0]])
 
         captured = capsys.readouterr()
