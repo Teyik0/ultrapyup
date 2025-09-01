@@ -55,7 +55,7 @@ jobs:
       - name: Set next version
         id: bump_version
         run: |
-          BUMP_VERSION=$(uv version --short)
+          BUMP_VERSION=${{ steps.bump_type.outputs.next }}
           echo "Next version: ${BUMP_VERSION}"
           echo "new_version=$BUMP_VERSION" >> $GITHUB_OUTPUT
 
@@ -83,8 +83,8 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.new_version }}
-          name: Beta Release v${{ steps.bump_version.outputs.new_version }}
+          tag_name: v${{ steps.bump_version.outputs.new_version }}-beta
+          name: v${{ steps.bump_version.outputs.new_version }}-beta
           draft: false
           prerelease: true
           files: dist/*
