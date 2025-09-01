@@ -152,11 +152,11 @@ class TestConsole:
         """Test console.print with table-like formatted output."""
         console.print("Package    Version")
         console.print("--------   -------")
-        console.print("ultrapy    0.1.0")
+        console.print("ultrapyup    0.1.0")
         console.print("ruff       0.1.0")
 
         captured = capsys.readouterr()
         assert "Package" in captured.out
         assert "Version" in captured.out
-        assert "ultrapy" in captured.out
+        assert "ultrapyup" in captured.out
         assert "0.1.0" in captured.out

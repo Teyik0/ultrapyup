@@ -1,6 +1,6 @@
-# Ultrapy Tests
+# Ultrapyup Tests
 
-Comprehensive test suite for the Ultrapy project initialization tool.
+Comprehensive test suite for the Ultrapyup project initialization tool.
 
 ## Running Tests
 
@@ -33,48 +33,48 @@ uv run pytest tests/test_initialize.py::TestCheckPythonProject::test_no_python_p
 
 #### Basic Coverage Report
 ```bash
-uv run pytest --cov=ultrapy
+uv run pytest --cov=ultrapyup
 ```
 
 #### Coverage with Missing Lines
 ```bash
-uv run pytest --cov=ultrapy --cov-report=term-missing
+uv run pytest --cov=ultrapyup --cov-report=term-missing
 ```
 
 #### HTML Coverage Report (Visual)
 ```bash
-uv run pytest --cov=ultrapy --cov-report=html
+uv run pytest --cov=ultrapyup --cov-report=html
 # Open htmlcov/index.html in browser to view
 ```
 
 #### XML Coverage Report (for CI/CD)
 ```bash
-uv run pytest --cov=ultrapy --cov-report=xml
+uv run pytest --cov=ultrapyup --cov-report=xml
 ```
 
 #### JSON Coverage Report
 ```bash
-uv run pytest --cov=ultrapy --cov-report=json
+uv run pytest --cov=ultrapyup --cov-report=json
 ```
 
 #### Multiple Reports at Once
 ```bash
-uv run pytest --cov=ultrapy --cov-report=term-missing --cov-report=html
+uv run pytest --cov=ultrapyup --cov-report=term-missing --cov-report=html
 ```
 
 #### Fail if Coverage Below Threshold
 ```bash
-uv run pytest --cov=ultrapy --cov-fail-under=80
+uv run pytest --cov=ultrapyup --cov-fail-under=80
 ```
 
 #### Coverage for Specific Module
 ```bash
-uv run pytest --cov=ultrapy.utils tests/test_utils.py
+uv run pytest --cov=ultrapyup.utils tests/test_utils.py
 ```
 
 #### Branch Coverage (More Detailed)
 ```bash
-uv run pytest --cov=ultrapy --cov-branch
+uv run pytest --cov=ultrapyup --cov-branch
 ```
 
 ## Coverage Report Interpretation

@@ -1,27 +1,27 @@
-# Ultrapy Resources
+# Ultrapyup Resources
 
-This directory contains base configurations that can be extended by projects using Ultrapy. These configurations follow the "extend, don't replace" philosophy, similar to tools like Ultracite.
+This directory contains base configurations that can be extended by projects using Ultrapyup. These configurations follow the "extend, don't replace" philosophy, similar to tools like Ultracite.
 
 ## 🎯 Available Configurations
 
 ### Ruff Configuration
 
 **Configuration files:**
-- `ruff_base.toml` - Base configuration (in installed ultrapy library)
+- `ruff_base.toml` - Base configuration (in installed ultrapyup library)
 - `ruff.toml` - Project configuration template (created in user projects)
 
 **How to extend:**
 
-1. **Automatically during `ultrapy init`:**
-A `ruff.toml` file is automatically created in your project root that extends the base configuration from the installed ultrapy library.
+1. **Automatically during `ultrapyup init`:**
+A `ruff.toml` file is automatically created in your project root that extends the base configuration from the installed ultrapyup library.
 
 2. **Your generated `ruff.toml` will look like:**
 ```toml
-# Ultrapy Project Configuration
-# This extends the base Ultrapy configuration from the installed library
+# Ultrapyup Project Configuration
+# This extends the base Ultrapyup configuration from the installed library
 
-# Extend the base configuration from installed ultrapy library
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+# Extend the base configuration from installed ultrapyup library
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 # Project-specific overrides
 [lint]
@@ -35,7 +35,7 @@ known-first-party = ["your_package_name"]
 3. **Alternative: In your project's `pyproject.toml`:**
 ```toml
 [tool.ruff]
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 # Project-specific settings
 [tool.ruff.lint]
@@ -52,7 +52,7 @@ convention = "numpy"   # Override to NumPy style
 - `.pre-commit-config.yaml` - Pre-commit hooks configuration
 
 **Usage:**
-These are automatically copied to your project root during `ultrapy init`.
+These are automatically copied to your project root during `ultrapyup init`.
 
 ## 🔧 Base Configuration Features
 
@@ -95,17 +95,17 @@ Like Ultracite for TypeScript/JavaScript, these configurations are designed to b
 
 ```
 your-project/
-├── ruff.toml                # Extends ultrapy base config (auto-created)
+├── ruff.toml                # Extends ultrapyup base config (auto-created)
 ├── pyproject.toml           # Your project config
-├── .pre-commit-config.yaml  # Copied from ultrapy
+├── .pre-commit-config.yaml  # Copied from ultrapyup
 └── src/
     └── your_package/
         └── __init__.py
 
 ### Your `ruff.toml` (auto-generated):
 ```toml
-# Ultrapy Project Configuration
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+# Ultrapyup Project Configuration
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 [lint.isort]
 known-first-party = ["your_package"]
@@ -115,7 +115,7 @@ known-first-party = ["your_package"]
 
 ### Add strict type checking:
 ```toml
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 [lint]
 extend-select = [
@@ -127,7 +127,7 @@ extend-select = [
 
 ### For Django projects:
 ```toml
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 [lint]
 extend-select = ["DJ"]  # Django-specific rules
@@ -138,7 +138,7 @@ extend-select = ["DJ"]  # Django-specific rules
 
 ### For FastAPI projects:
 ```toml
-extend = "/path/to/installed/ultrapy/resources/ruff_base.toml"
+extend = "/path/to/installed/ultrapyup/resources/ruff_base.toml"
 
 [lint]
 extend-select = [

@@ -171,7 +171,7 @@ class TestInitialize:
             captured = capsys.readouterr()
             assert "uv" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
-            assert "ruff, ty, ultrapy" in captured.out  # Dependencies list
+            assert "ruff, ty, ultrapyup" in captured.out  # Dependencies list
             assert (
                 "Ruff configuration setup completed" in captured.out
             )  # From ruff_config_setup

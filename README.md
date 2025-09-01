@@ -1,15 +1,15 @@
-# Ultrapy
+# Ultrapyup
 
 **The AI-ready Python toolkit that helps you build and ship code _faster_.**
 
-Ultrapy is a zero-config Python development framework that provides a robust development experience for your team and your AI integrations. Built on modern Python tooling for lightning-fast performance, it automatically handles project setup, dependency management, and code quality without interrupting your workflow.
+Ultrapyup is a zero-config Python development framework that provides a robust development experience for your team and your AI integrations. Built on modern Python tooling for lightning-fast performance, it automatically handles project setup, dependency management, and code quality without interrupting your workflow.
 
-> **⚠️ Early Development**: Ultrapy is in active development. APIs may change and features are being added rapidly. We welcome feedback and contributions!
+> **⚠️ Early Development**: Ultrapyup is in active development. APIs may change and features are being added rapidly. We welcome feedback and contributions!
 
 <div>
-  <img src="https://img.shields.io/github/actions/workflow/status/teyik0/ultrapy/cd.yaml" alt="CI Status" />
-  <img src="https://img.shields.io/pypi/v/ultrapy" alt="PyPI Version" />
-  <img src="https://img.shields.io/github/license/teyik0/ultrapy" alt="License" />
+  <img src="https://img.shields.io/github/actions/workflow/status/teyik0/ultrapyup/cd.yaml" alt="CI Status" />
+  <img src="https://img.shields.io/pypi/v/ultrapyup" alt="PyPI Version" />
+  <img src="https://img.shields.io/github/license/teyik0/ultrapyup" alt="License" />
   <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python Version" />
 </div>
 
@@ -17,13 +17,13 @@ Heavily inspired by [Ultracite](https://github.com/haydenbleasel/ultracite), but
 
 ## Quick Start
 
-Install and initialize Ultrapy in your project:
+Install and initialize Ultrapyup in your project:
 
 ```sh
-uvx ultrapy init
+uvx ultrapyup init
 ```
 
-That's it! Ultrapy will automatically detect your project structure and set up modern Python tooling with best practices. No configuration required.
+That's it! Ultrapyup will automatically detect your project structure and set up modern Python tooling with best practices. No configuration required.
 
 ## Key Features (Coming Soon)
 
@@ -47,7 +47,7 @@ Automatically manages dependencies, handles virtual environments, and enforces c
 
 ## How It Works (Planned)
 
-Once set up, Ultrapy will run mostly in the background:
+Once set up, Ultrapyup will run mostly in the background:
 
 - **Automatic project detection** and intelligent setup
 - **Dependency management** with blazing-fast uv
@@ -56,12 +56,12 @@ Once set up, Ultrapy will run mostly in the background:
 - **Import organization** and cleanup
 - **Testing framework** with pytest and coverage
 
-Because uv and ruff are extremely fast, even on large projects, running Ultrapy's checks will be instantaneous and can comfortably run on every save without lag.
+Because uv and ruff are extremely fast, even on large projects, running Ultrapyup's checks will be instantaneous and can comfortably run on every save without lag.
 
 ## Current Status
 
 **✅ Available Now:**
-- `ultrapy init` - Project initialization and detection
+- `ultrapyup init` - Project initialization and detection
 - Basic project structure analysis
 - Package manager detection (pip, uv, poetry, etc.)
 
@@ -81,20 +81,20 @@ Because uv and ruff are extremely fast, even on large projects, running Ultrapy'
 
 ```sh
 # Initialize a new or existing Python project
-uvx ultrapy init
+uvx ultrapyup init
 
 # Coming soon:
-# ultrapy format    - Format your code
-# ultrapy check     - Run quality checks
-# ultrapy test      - Run tests
-# ultrapy build     - Build your package
+# ultrapyup format    - Format your code
+# ultrapyup check     - Run quality checks
+# ultrapyup test      - Run tests
+# ultrapyup build     - Build your package
 ```
 
-## Why Ultrapy?
+## Why Ultrapyup?
 
-Finally — a lightning-fast Python toolkit that ensures you, your team, and your AI agents are writing code in harmony. Stop spending time on tooling configuration and dependency management. Let Ultrapy handle the mundane so you can focus on building and shipping.
+Finally — a lightning-fast Python toolkit that ensures you, your team, and your AI agents are writing code in harmony. Stop spending time on tooling configuration and dependency management. Let Ultrapyup handle the mundane so you can focus on building and shipping.
 
-Inspired by the success of Ultracite in the JavaScript ecosystem, Ultrapy brings the same philosophy to Python development.
+Inspired by the success of Ultracite in the JavaScript ecosystem, Ultrapyup brings the same philosophy to Python development.
 
 ## Development
 
@@ -102,8 +102,8 @@ This project uses uv for dependency management and packaging. To contribute:
 
 ```bash
 # Clone the repository
-git clone https://github.com/teyik0/ultrapy.git
-cd ultrapy
+git clone https://github.com/teyik0/ultrapyup.git
+cd ultrapyup
 
 # Install dependencies
 uv sync --all-extras --dev

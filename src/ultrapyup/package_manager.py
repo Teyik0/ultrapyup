@@ -163,7 +163,7 @@ def install_dependencies(
 
         log.title("Dependencies installed")
         log.info(
-            f"ruff, ty, ultrapy{', ' if pre_commit_tools else ''}{
+            f"ruff, ty, ultrapyup{', ' if pre_commit_tools else ''}{
                 ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools)
                 if pre_commit_tools
                 else ''
@@ -172,7 +172,7 @@ def install_dependencies(
 
 
 def ruff_config_setup():
-    """Add Ruff configuration to pyproject.toml that extends the base configuration from local .venv ultrapy installation."""
+    """Add Ruff configuration to pyproject.toml that extends the base configuration from local .venv ultrapyup installation."""
     pyproject_path = Path.cwd() / "pyproject.toml"
 
     if not pyproject_path.exists():
@@ -206,9 +206,7 @@ def ruff_config_setup():
 
     python_version_dir = python_dirs[0].name  # Take first match (should only be one)
 
-    base_config_path = (
-        f".venv/lib/{python_version_dir}/site-packages/ultrapy/resources/ruff_base.toml"
-    )
+    base_config_path = f".venv/lib/{python_version_dir}/site-packages/ultrapyup/resources/ruff_base.toml"
 
     # Update or add Ruff configuration using toml library
     with open(pyproject_path) as f:

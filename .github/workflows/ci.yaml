@@ -1,4 +1,4 @@
-name: Ultrapy - CI
+name: Ultrapyup - CI
 
 on:
   pull_request:

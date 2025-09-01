@@ -108,12 +108,12 @@ ignore = ["E501"]
     site_packages.mkdir(parents=True)
 
     # Create ultrapy package structure in site-packages
-    ultrapy_path = site_packages / "ultrapy"
+    ultrapy_path = site_packages / "ultrapyup"
     resources_path = ultrapy_path / "resources"
     resources_path.mkdir(parents=True)
 
     # Create ruff_base.toml
-    ruff_base_content = """# Ultrapy base Ruff configuration
+    ruff_base_content = """# Ultrapyup base Ruff configuration
 line-length = 88
 target-version = "py310"
 

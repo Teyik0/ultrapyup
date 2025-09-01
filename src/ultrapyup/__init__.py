@@ -6,13 +6,13 @@ from ultrapyup.initialize import initialize
 
 
 app = typer.Typer(
-    name="Ultrapy",
+    name="Ultrapyup",
     help="Ship code faster and with more confidence.",
     no_args_is_help=True,
 )
 
 
-@app.command("init", help="Initialize Ultrapy in the current directory")
+@app.command("init", help="Initialize Ultrapyup in the current directory")
 def init_command():
     initialize()
 

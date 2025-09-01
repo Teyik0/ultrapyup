@@ -45,7 +45,7 @@ class TestGetPackageManager:
 
     def test_manual_selection_when_no_lockfile(self, python_empty_project: Path):
         """Test manual selection when no lockfile exists."""
-        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "uv"
             result = get_package_manager()
 
@@ -55,7 +55,7 @@ class TestGetPackageManager:
 
     def test_manual_selection_pip(self, python_empty_project: Path):
         """Test manual selection of pip."""
-        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "pip"
             result = get_package_manager()
 
@@ -65,7 +65,7 @@ class TestGetPackageManager:
 
     def test_invalid_selection_raises_error(self, project_dir: Path):
         """Test that invalid selection raises ValueError."""
-        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "invalid_manager"
 
             import pytest
@@ -86,7 +86,7 @@ class TestInstallDependencies:
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapy" in captured.out
+        assert "ruff, ty, ultrapyup" in captured.out
 
         pyproject_path = python_uv_project / "pyproject.toml"
         pyproject = pyproject_path.read_text()
@@ -100,7 +100,7 @@ class TestInstallDependencies:
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapy, lefthook" in captured.out
+        assert "ruff, ty, ultrapyup, lefthook" in captured.out
 
         pyproject_path = python_uv_project / "pyproject.toml"
         pyproject = pyproject_path.read_text()
@@ -118,7 +118,7 @@ class TestInstallDependencies:
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapy" in captured.out
+        assert "ruff, ty, ultrapyup" in captured.out
 
         pyproject_path = project_with_requirements / "pyproject.toml"
         pyproject = pyproject_path.read_text()
@@ -139,7 +139,7 @@ class TestInstallDependencies:
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapy, lefthook" in captured.out
+        assert "ruff, ty, ultrapyup, lefthook" in captured.out
 
         pyproject_path = project_with_requirements / "pyproject.toml"
         pyproject = pyproject_path.read_text()
@@ -181,7 +181,7 @@ class TestRuffConfigSetup:
         assert "tool" in updated_toml
         assert "ruff" in updated_toml["tool"]
         assert (
-            "site-packages/ultrapy/resources/ruff_base.toml"
+            "site-packages/ultrapyup/resources/ruff_base.toml"
             in updated_toml["tool"]["ruff"]["extend"]
         )
 
@@ -218,7 +218,7 @@ class TestRuffConfigSetup:
         assert "tool" in updated_toml
         assert "ruff" in updated_toml["tool"]
         assert (
-            "site-packages/ultrapy/resources/ruff_base.toml"
+            "site-packages/ultrapyup/resources/ruff_base.toml"
             in updated_toml["tool"]["ruff"]["extend"]
         )
 
