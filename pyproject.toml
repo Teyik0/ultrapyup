@@ -25,9 +25,6 @@ ultrapy = "ultrapy:app"
 requires = ["uv_build>=0.8.0,<0.9"]
 build-backend = "uv_build"
 
-[tool.uv.workspace]
-members = ["examples/ultrapy-test"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

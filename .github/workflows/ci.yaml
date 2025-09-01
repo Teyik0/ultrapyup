@@ -1,9 +1,9 @@
 name: Ultrapy - CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [dev, main]
+  workflow_call:
 
 jobs:
   build:

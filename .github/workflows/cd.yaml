@@ -1,0 +1,47 @@
+name: CD
+
+on:
+  push:
+    branches: [main, dev]
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/ci.yaml
+
+      - name: Add beta suffix for dev branch
+        id: bump_version
+        if: ${{ github.ref }} == 'refs/heads/dev'
+        run: uv version --bump beta
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_USERNAME: __token__
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.bump_version.outputs.new_version }}
+          name: Release v${{ steps.bump_version.outputs.new_version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          generate_release_notes: true
+
+      - name: Create Beta Release
+        if: github.ref == 'refs/heads/dev'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.bump_version.outputs.new_version }}
+          name: Beta Release v${{ steps.bump_version.outputs.new_version }}
+          draft: false
+          prerelease: true
+          files: dist/*
+          generate_release_notes: true
