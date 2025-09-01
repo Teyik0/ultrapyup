@@ -116,7 +116,6 @@ Key fixtures in `conftest.py`:
 - `project_with_requirements`: Creates a project with `requirements.txt`
 - `project_with_pyproject`: Creates a project with `pyproject.toml`
 - `project_with_ruff_config`: Creates a project with existing Ruff configuration
-- `empty_project`: Creates an empty directory (no Python project)
 
 ## Test Coverage
 

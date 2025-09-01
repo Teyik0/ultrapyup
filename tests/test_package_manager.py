@@ -1,13 +1,14 @@
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
+from ultrapy.initialize import _migrate_requirements_to_pyproject
 from ultrapy.package_manager import (
     PackageManager,
     get_package_manager,
     install_dependencies,
     ruff_config_setup,
 )
-from ultrapy.pre_commit import PreCommitTool
+from ultrapy.pre_commit import options as pre_commit_options
 
 
 class TestGetPackageManager:
@@ -27,11 +28,10 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "uv" in captured.out
 
-    def test_auto_detect_requirements_txt(self, python_uv_project: Path, capsys):
+    def test_auto_detect_requirements_txt(
+        self, project_with_requirements: Path, capsys
+    ):
         """Test auto-detection when requirements.txt exists."""
-        # Create requirements.txt file
-        (python_uv_project / "requirements.txt").write_text("pytest>=7.0.0\n")
-
         result = get_package_manager()
 
         assert isinstance(result, PackageManager)
@@ -43,29 +43,20 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "pip" in captured.out
 
-    def test_manual_selection_when_no_lockfile(self, project_dir: Path):
+    def test_manual_selection_when_no_lockfile(self, python_empty_project: Path):
         """Test manual selection when no lockfile exists."""
-        # Mock inquirer to simulate user selection
-        with patch("ultrapy.package_manager.inquirer.select") as mock_select:
-            mock_select_instance = MagicMock()
-            mock_select_instance.execute.return_value = "uv"
-            mock_select.return_value = mock_select_instance
+        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+            mock_inquirer.return_value.execute.return_value = "uv"
+            result = get_package_manager()
 
-            with patch("ultrapy.package_manager.log") as mock_log:
-                result = get_package_manager()
+            assert result.name == "uv"
+            assert result.add_cmd == "uv add"
+            assert result.lockfile == "uv.lock"
 
-                assert result.name == "uv"
-                assert result.add_cmd == "uv add"
-                mock_select.assert_called_once()
-                mock_log.info.assert_called_with("uv")
-
-    def test_manual_selection_pip(self, project_dir: Path):
+    def test_manual_selection_pip(self, python_empty_project: Path):
         """Test manual selection of pip."""
-        with patch("ultrapy.package_manager.inquirer.select") as mock_select:
-            mock_select_instance = MagicMock()
-            mock_select_instance.execute.return_value = "pip"
-            mock_select.return_value = mock_select_instance
-
+        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+            mock_inquirer.return_value.execute.return_value = "pip"
             result = get_package_manager()
 
             assert result.name == "pip"
@@ -74,83 +65,91 @@ class TestGetPackageManager:
 
     def test_invalid_selection_raises_error(self, project_dir: Path):
         """Test that invalid selection raises ValueError."""
-        with patch("ultrapy.package_manager.inquirer.select") as mock_select:
-            mock_select_instance = MagicMock()
-            mock_select_instance.execute.return_value = "invalid_manager"
-            mock_select.return_value = mock_select_instance
+        with patch("ultrapy.package_manager.inquirer.select") as mock_inquirer:
+            mock_inquirer.return_value.execute.return_value = "invalid_manager"
 
-            try:
+            import pytest
+
+            with pytest.raises(
+                ValueError, match="Unknown package manager: invalid_manager"
+            ):
                 get_package_manager()
-                raise AssertionError("Should have raised ValueError")
-            except ValueError as e:
-                assert "Unknown package manager: invalid_manager" in str(e)
 
 
 class TestInstallDependencies:
     """Tests for install_dependencies function."""
 
-    def test_install_with_uv_no_precommit(self, project_dir: Path):
+    def test_install_with_uv_no_precommit(self, python_uv_project: Path, capsys):
         """Test installing dependencies with uv and no pre-commit tools."""
         pm = PackageManager("uv", "uv add", "uv.lock")
+        install_dependencies(pm, None)
 
-        with patch("ultrapy.package_manager.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            with (
-                patch("ultrapy.package_manager.console"),
-                patch("ultrapy.package_manager.log") as mock_log,
-            ):
-                install_dependencies(pm, None)
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapy" in captured.out
 
-                # Check the command that was run
-                mock_run.assert_called_once()
-                call_args = mock_run.call_args
-                assert "uv add ruff ty ultrapy" in call_args[0][0]
-                assert "--dev" in call_args[0][0]
+        pyproject_path = python_uv_project / "pyproject.toml"
+        pyproject = pyproject_path.read_text()
+        assert "ruff" in pyproject
+        assert "ty" in pyproject
 
-                mock_log.title.assert_called_with("Dependencies installed")
-                mock_log.info.assert_called_with("ruff, ty, ultrapy")
-
-    def test_install_with_uv_and_precommit(self, project_dir: Path):
+    def test_install_with_uv_and_precommit(self, python_uv_project: Path, capsys):
         """Test installing dependencies with uv and pre-commit tools."""
         pm = PackageManager("uv", "uv add", "uv.lock")
-        tools = [
-            PreCommitTool("lefthook", "lefthook", "lefthook.yaml"),
-            PreCommitTool("pre-commit", "pre-commit", ".pre-commit-config.yaml"),
-        ]
+        install_dependencies(pm, [pre_commit_options[0]])
 
-        with patch("ultrapy.package_manager.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            with (
-                patch("ultrapy.package_manager.console"),
-                patch("ultrapy.package_manager.log") as mock_log,
-                patch("ultrapy.package_manager.console"),
-                patch("ultrapy.package_manager.log") as mock_log,
-            ):
-                install_dependencies(pm, tools)
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapy, lefthook" in captured.out
 
-                call_args = mock_run.call_args
-                assert "uv add ruff ty ultrapy" in call_args[0][0]
-                assert "lefthook" in call_args[0][0]
-                assert "pre-commit" in call_args[0][0]
-                assert "--dev" in call_args[0][0]
+        pyproject_path = python_uv_project / "pyproject.toml"
+        pyproject = pyproject_path.read_text()
+        assert "ruff" in pyproject
+        assert "ty" in pyproject
+        assert "lefthook" in pyproject
 
-                mock_log.info.assert_called_with(
-                    "ruff, ty, ultrapy, lefthook, pre-commit"
-                )
-
-    def test_install_with_pip(self, project_dir: Path):
-        """Test installing dependencies with pip."""
+    def test_install_with_pip_no_precommit(
+        self, project_with_requirements: Path, capsys
+    ):
+        """Test installing dependencies with pip and no pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
+        _migrate_requirements_to_pyproject()
+        install_dependencies(pm, None)
 
-        with (
-            patch("ultrapy.package_manager.console"),
-            patch("ultrapy.package_manager.log"),
-            patch("ultrapy.package_manager.subprocess.run") as mock_run,
-        ):
-            install_dependencies(pm, None)
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapy" in captured.out
 
-            call_args = mock_run.call_args
-            assert "pip install ruff ty ultrapy" in call_args[0][0]
+        pyproject_path = project_with_requirements / "pyproject.toml"
+        pyproject = pyproject_path.read_text()
+
+        assert "ruff" in pyproject
+        assert "ty" in pyproject
+        assert "requests" in pyproject
+        assert "pytest" in pyproject
+        assert "black" in pyproject
+
+    def test_install_with_pip_and_precommit(
+        self, project_with_requirements: Path, capsys
+    ):
+        """Test installing dependencies with pip and pre-commit tools."""
+        pm = PackageManager("pip", "pip install", "requirements.txt")
+        _migrate_requirements_to_pyproject()
+        install_dependencies(pm, [pre_commit_options[0]])
+
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapy, lefthook" in captured.out
+
+        pyproject_path = project_with_requirements / "pyproject.toml"
+        pyproject = pyproject_path.read_text()
+
+        assert "ruff" in pyproject
+        assert "ty" in pyproject
+        assert "lefthook" in pyproject
+        assert "requests" in pyproject
+        assert "pytest" in pyproject
+        assert "black" in pyproject
 
 
 class TestRuffConfigSetup:

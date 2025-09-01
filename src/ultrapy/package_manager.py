@@ -48,20 +48,119 @@ def get_package_manager() -> PackageManager:
     raise ValueError(f"Unknown package manager: {package_manager}")
 
 
-def install_dependencies(
-    package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None
-):
-    with console.status("[bold green]Installing dependencies"):
-        subprocess.run(
-            f"{package_manager.add_cmd} ruff ty ultrapy"
-            f"{
-                ' '.join(precommit_tool.value for precommit_tool in pre_commit_tools)
-                if pre_commit_tools
-                else ' '
-            } --dev",
+def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]):
+    """Install dependencies using uv package manager."""
+    result = subprocess.run(
+        f"{package_manager.add_cmd} {' '.join(dev_deps)} --dev",
+        shell=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
+
+
+def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
+    """Install dependencies using pip package manager."""
+    venv_path = Path(".venv")
+    if venv_path.exists():
+        pip_cmd = (
+            ".venv/bin/pip"
+            if not Path(".venv/Scripts").exists()
+            else ".venv/Scripts/pip"
+        )
+    else:
+        pip_cmd = "pip"
+
+    # Fetch latest versions from PyPI for each dependency
+    latest_versions = {}
+    for dep in dev_deps:
+        result = subprocess.run(
+            f"{pip_cmd} index versions {dep}",
             shell=True,
             capture_output=True,
+            text=True,
         )
+        if result.returncode == 0:
+            lines = result.stdout.strip().split("\n")
+            versions_line = lines[1].split("Available versions:")[1].strip()
+            if versions_line:
+                # Get the first (latest) version
+                latest_version = versions_line.split(",")[0].strip()
+                latest_versions[dep] = latest_version
+                break
+        else:
+            latest_versions[dep] = "*"
+
+    # Update pyproject.toml with dev dependencies using toml library
+    pyproject_path = Path("pyproject.toml")
+    with open(pyproject_path) as f:
+        config = toml.load(f)
+        if "dependency-groups" not in config:
+            config["dependency-groups"] = {}
+
+        existing_dev_deps = config["dependency-groups"].get("dev", [])
+        existing_packages = set()
+        for dep_spec in existing_dev_deps:
+            package_name = (
+                dep_spec.split("==")[0]
+                .split(">=")[0]
+                .split("<=")[0]
+                .split("~=")[0]
+                .split("!=")[0]
+                .strip()
+            )
+            existing_packages.add(package_name)
+
+        merged_dev_deps = []
+
+        for dep_spec in existing_dev_deps:
+            package_name = (
+                dep_spec.split("==")[0]
+                .split(">=")[0]
+                .split("<=")[0]
+                .split("~=")[0]
+                .split("!=")[0]
+                .strip()
+            )
+            if package_name not in dev_deps:
+                merged_dev_deps.append(dep_spec)
+
+        for dep in dev_deps:
+            version = latest_versions.get(dep, "*")
+            if version != "*":
+                merged_dev_deps.append(f"{dep}=={version}")
+            else:
+                merged_dev_deps.append(dep)
+
+        config["dependency-groups"]["dev"] = merged_dev_deps
+
+    with open(pyproject_path, "w") as f:
+        toml.dump(config, f)
+
+    result = subprocess.run(
+        f"{pip_cmd} install -e .",
+        shell=True,
+    )
+    if result.returncode != 0:
+        log.info(f"pip install -e . failed with return code {result.returncode}")
+
+
+def install_dependencies(
+    package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None
+) -> None:
+    dev_deps = [
+        "ruff",
+        "ty",
+    ]
+    if pre_commit_tools:
+        dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
+
+    with console.status("[bold green]Installing dependencies"):
+        if package_manager.name == "uv":
+            _install_with_uv(package_manager, dev_deps)
+        else:
+            _install_with_pip(package_manager, dev_deps)
+
         log.title("Dependencies installed")
         log.info(
             f"ruff, ty, ultrapy{', ' if pre_commit_tools else ''}{

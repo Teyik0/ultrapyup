@@ -15,7 +15,7 @@ class PreCommitTool:
     filename: str
 
 
-options = [
+options: list[PreCommitTool] = [
     PreCommitTool("Lefthook", "lefthook", "lefthook.yaml"),
     PreCommitTool("Pre-commit", "pre-commit", ".pre-commit-config.yaml"),
 ]

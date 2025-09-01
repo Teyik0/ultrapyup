@@ -13,7 +13,7 @@ from ultrapy.initialize import (
 class TestCheckPythonProject:
     """Tests for _check_python_project function."""
 
-    def test_no_python_project(self, empty_project: Path, capsys):
+    def test_no_python_project(self, project_dir: Path, capsys):
         """Test when no Python project files exist."""
         result = _check_python_project()
 
@@ -144,7 +144,7 @@ black==23.0.0
 class TestInitialize:
     """Tests for the main initialize function."""
 
-    def test_initialize_exits_early_without_project(self, empty_project: Path):
+    def test_initialize_exits_early_without_project(self, project_dir: Path):
         """Test that initialize exits early when no Python project exists."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Mock get_package_manager inquire call
@@ -195,7 +195,7 @@ class TestInitialize:
                 "Ruff configuration setup completed" in captured.out
             )  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
-            assert "lefthook.yml created" in captured.out  # Precommit file created
+            assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
 
     def test_initialize_with_editors(self, python_uv_project: Path, capsys):

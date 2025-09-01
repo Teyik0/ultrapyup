@@ -53,10 +53,10 @@ def python_uv_project(project_dir: Path) -> Path:
 
 
 @pytest.fixture
-def python_non_uv_project(project_dir: Path) -> Path:
+def python_empty_project(project_dir: Path) -> Path:
     """Create a Python project with just a .venv directory."""
     subprocess.run(
-        ["uv", "venv"],
+        ["python", "-m", "venv", ".venv"],
         cwd=project_dir,
         capture_output=True,
         check=True,
@@ -66,7 +66,7 @@ def python_non_uv_project(project_dir: Path) -> Path:
 
 
 @pytest.fixture
-def project_with_requirements(project_dir: Path) -> Path:
+def project_with_requirements(python_empty_project: Path) -> Path:
     """Create a project with requirements.txt."""
     requirements_content = """# Test requirements
 requests==2.31.0
@@ -78,9 +78,9 @@ black==23.0.0
 
 ruff>=0.1.0
 """
-    (project_dir / "requirements.txt").write_text(requirements_content)
+    (python_empty_project / "requirements.txt").write_text(requirements_content)
 
-    return project_dir
+    return python_empty_project
 
 
 @pytest.fixture
@@ -142,12 +142,6 @@ select = ["E", "F", "I"]
     (resources_path / "ruff_base.toml").write_text(ruff_base_content)
 
     return project_with_pyproject
-
-
-@pytest.fixture
-def empty_project(project_dir: Path) -> Path:
-    """Create an empty directory (no Python project)."""
-    return project_dir
 
 
 @pytest.fixture
