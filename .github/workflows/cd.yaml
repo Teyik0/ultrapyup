@@ -50,7 +50,7 @@ jobs:
 
       - name: Bump version in pyproject.toml for main branch
         if: github.ref == 'refs/heads/main'
-        run: uv version --bump ${{ steps.bump_type.outputs.bump }}
+        run: uv version --bump stable
 
       - name: Set next version
         id: bump_version
