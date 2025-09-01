@@ -8,9 +8,11 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/ci
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: ./.github/actions/ci
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
         id: bump_type

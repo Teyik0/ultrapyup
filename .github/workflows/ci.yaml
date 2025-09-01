@@ -3,19 +3,10 @@ name: Ultrapy - CI
 on:
   pull_request:
     branches-ignore: [dev, main]
-  workflow_call:
-    inputs:
-      fetch-depth:
-        description: "Number of commits to fetch. 0 indicates all history for all branches and tags."
-        required: false
-        default: 1
-        type: number
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Run CI
-        uses: ./.github/actions/ci
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ci
