@@ -5,6 +5,7 @@ on:
     branches: [main, dev]
     paths-ignore:
       - pyproject.toml
+      - uv.lock
 
 jobs:
   cd:
@@ -66,6 +67,7 @@ jobs:
         run: uv build
 
       - name: Publish to PyPI
+        if: github.repository == 'Teyik0/ultrapyup' && secrets.PYPI_TOKEN != ''
         env:
           UV_PUBLISH_USERNAME: __token__
           UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN }}
@@ -98,6 +100,7 @@ jobs:
         with:
           tag_name: v${{ steps.beta_version.outputs.formatted_version }}
           name: v${{ steps.beta_version.outputs.formatted_version }}
+          target_commitish: ${{ github.sha }}
           draft: false
           prerelease: true
           files: dist/*

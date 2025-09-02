@@ -76,3 +76,5 @@ def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitT
                 check=False,
                 capture_output=True,
             )
+        else:
+            raise ValueError(f"Unsupported package manager for lefthook install: {package_manager.name}")

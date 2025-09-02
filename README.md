@@ -34,7 +34,7 @@ Built on [uv](https://github.com/astral-sh/uv) for instant dependency resolution
 Preconfigured rules optimized for FastAPI, Django, and data science projects with sensible defaults. Customize when needed, but it works perfectly out of the box.
 
 ### 🛡️ **Maximum Code Quality**
-Enforces strict type checking with mypy, code formatting with ruff, and testing best practices by default, catching errors and maintaining consistency before they become problems.
+Enforces strict type checking with ty, code formatting with ruff, and testing best practices by default, catching errors and maintaining consistency before they become problems.
 
 ### 🏗️ **Monorepo Ready**
 Unified toolchain configuration across all packages and services, eliminating thousands of lines of duplicate config files while maintaining consistency.
@@ -52,7 +52,7 @@ Once set up, Ultrapyup will run mostly in the background:
 - **Automatic project detection** and intelligent setup
 - **Dependency management** with blazing-fast uv
 - **Code formatting** with ruff (Rust-powered)
-- **Type safety** enforced with strict mypy rules
+- **Type safety** enforced with strict ty rules
 - **Import organization** and cleanup
 - **Testing framework** with pytest and coverage
 
@@ -66,7 +66,7 @@ Because uv and ruff are extremely fast, even on large projects, running Ultrapyu
 - Package manager detection (pip, uv, poetry, etc.)
 
 **🚧 In Development:**
-- Automated tooling setup (ruff, mypy, pytest)
+- Automated tooling setup (ruff, ty, pytest)
 - Code quality enforcement
 - AI-optimized configurations
 - Plugin system for extensibility

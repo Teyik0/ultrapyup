@@ -4,17 +4,18 @@ pre-commit:
     - name: format
       run: uv run ruff format .
       glob: "*.{py}"
+      stage_fixed: true
 
     - name: lint
       run: uv run ruff check --fix .
       glob: "*.{py}"
+      stage_fixed: true
 
     - name: typecheck
       run: uv run ty check .
       glob: "*.{py}"
 
 pre-push:
-  parallel: true
   jobs:
     - name: pytest
       run: uv run pytest -n auto tests --cov

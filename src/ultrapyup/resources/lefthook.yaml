@@ -2,19 +2,20 @@ pre-commit:
   parallel: true
   jobs:
     - name: format
-      run: uvx run ruff format .
+      run: uv run ruff format .
       glob: "*.{py}"
+      stage_fixed: true
 
     - name: lint
       run: uv run ruff check --fix .
       glob: "*.{py}"
+      stage_fixed: true
 
     - name: typecheck
       run: uv run ty check .
       glob: "*.{py}"
 
 pre-push:
-  parallel: true
   jobs:
     - name: pytest
       run: uv run pytest -n auto tests --cov
@@ -22,4 +23,4 @@ pre-push:
 commit-msg:
   jobs:
     - name: check
-      run: uv run commitlint {1}
+      run: uv run commitlint --file {1}

@@ -44,7 +44,7 @@ class TestGetEditors:
 
     def test_select_multiple_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting multiple editors."""
-        with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = [
                 "Zed",
                 "GitHub Copilot (VSCode)",
@@ -69,7 +69,7 @@ class TestGetEditors:
 
     def test_select_all_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting all available editors."""
-        with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = [
                 "GitHub Copilot (VSCode)",
                 "Cursor",
@@ -102,7 +102,7 @@ class TestGetEditors:
 
     def test_skip_selection(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test skipping editor selection (Ctrl+C)."""
-        with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = None
             result = get_editors()
 
@@ -113,7 +113,7 @@ class TestGetEditors:
 
     def test_empty_selection(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test empty selection (no editors selected)."""
-        with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = []
 
             result = get_editors()
@@ -125,7 +125,7 @@ class TestGetEditors:
 
     def test_inquirer_configuration(self) -> None:
         """Test that inquirer is configured correctly."""
-        with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_select = MagicMock()
             mock_inquirer.return_value = mock_select
             mock_select.execute.return_value = []

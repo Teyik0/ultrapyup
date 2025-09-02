@@ -46,7 +46,11 @@ class PackageManager:
         # Determine pip command path
         venv_path = Path(".venv")
         if venv_path.exists():
-            pip_cmd = ".venv/bin/pip" if not Path(".venv/Scripts").exists() else ".venv/Scripts/pip"
+            pip_cmd = (
+                str(Path(".venv") / "Scripts" / "pip")
+                if Path(".venv/Scripts").exists()
+                else str(Path(".venv") / "bin" / "pip")
+            )
         else:
             pip_cmd = "pip"
 
@@ -285,5 +289,4 @@ def ty_config_setup() -> None:
         toml.dump(config, f)
 
     log.title("Ty configuration setup completed")
-    action = "Override" if ty_exists else "Added"
-    log.info(f"{action} Ty config in pyproject.toml with root=['./src']")
+    log.info("Added Ty config in pyproject.toml with root=['./src']")

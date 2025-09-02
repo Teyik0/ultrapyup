@@ -30,6 +30,13 @@ def _migrate_requirements_to_pyproject() -> None:
     requirements = requirements_path.read_text().strip().split("\n")
     requirements = [req.strip() for req in requirements if req.strip() and not req.startswith("#")]
 
+    filtered_requirements = [
+        req for req in requirements if not any(keyword in req.lower() for keyword in ["ruff", "ty", "lefthook"])
+    ]
+    # Build dependency lines with proper formatting (no trailing comma)
+    dependency_lines = [f'    "{req}"' for req in filtered_requirements]
+    dependencies_content = ",\n".join(dependency_lines)
+
     python_version = _get_python_version()
     pyproject_content = f"""[project]
 name = "your-project-name"
@@ -37,13 +44,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">={python_version}"
 dependencies = [
-{
-        chr(10).join(
-            f'    "{req}",'
-            for req in requirements
-            if not any(keyword in req.lower() for keyword in ["ruff", "ty", "lefthook"])
-        )
-    }
+{dependencies_content}
 ]
 """
 
