@@ -67,7 +67,7 @@ def _check_python_project() -> bool:
     return True
 
 
-def initialize():
+def initialize() -> None:
     """Initialize and configure a Python project with development tools."""
     if not _check_python_project():
         return

@@ -51,7 +51,7 @@ def get_precommit_tool() -> list[PreCommitTool] | None:
     return pre_commit_tools
 
 
-def precommit_setup(add_cmd: str, pre_commit_tool: PreCommitTool):
+def precommit_setup(add_cmd: str, pre_commit_tool: PreCommitTool) -> None:
     """Set up pre-commit tool by copying configuration file and installing hooks."""
     current_file = Path(__file__)
     lefthook_source = current_file.parent / "resources" / pre_commit_tool.filename

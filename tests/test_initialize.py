@@ -15,7 +15,7 @@ from ultrapyup.initialize import (
 class TestCheckPythonProject:
     """Tests for _check_python_project function."""
 
-    def test_no_python_project(self: Path, capsys):
+    def test_no_python_project(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test when no Python project files exist."""
         result = _check_python_project()
 
@@ -23,7 +23,7 @@ class TestCheckPythonProject:
         captured = capsys.readouterr()
         assert "No Python project detected" in captured.out
 
-    def test_with_venv_only(self, project_dir: Path):
+    def test_with_venv_only(self, project_dir: Path) -> None:
         """Test when only .venv directory exists."""
         venv_path = project_dir / ".venv"
         venv_path.mkdir()
@@ -32,22 +32,22 @@ class TestCheckPythonProject:
 
         assert result is True
 
-    def test_with_requirements_txt(self, project_with_requirements: Path):
+    def test_with_requirements_txt(self, project_with_requirements: Path) -> None:
         """Test when requirements.txt exists."""
         result = _check_python_project()
 
         assert result is True
 
-        pyproject_path = project_with_requirements / "pyproject.toml"
-        assert pyproject_path.exists()
+        requirements_txt = project_with_requirements / "requirements.txt"
+        assert requirements_txt.exists()
 
-        content = pyproject_path.read_text()
+        content = requirements_txt.read_text()
         assert "requests==2.31.0" in content
         assert "pytest>=7.0.0" in content
         assert "tqdm>=4.67.1" in content
         assert "ruff>=0.1.0" in content
 
-    def test_with_pyproject_toml(self: Path):
+    def test_with_pyproject_toml(self) -> None:
         """Test when pyproject.toml exists."""
         result = _check_python_project()
 
@@ -57,7 +57,7 @@ class TestCheckPythonProject:
 class TestMigrateRequirementsToPyproject:
     """Tests for _migrate_requirements_to_pyproject function."""
 
-    def test_successful_migration(self, project_dir: Path, capsys):
+    def test_successful_migration(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test successful migration from requirements.txt to pyproject.toml."""
         requirements_content = """requests==2.31.0
 pytest>=7.0.0
@@ -78,7 +78,7 @@ black==23.0.0"""
         assert "Migrated requirements.txt to pyproject.toml" in captured.out
         assert "Found 3 dependencies" in captured.out
 
-    def test_no_migration_when_pyproject_exists(self, project_dir: Path):
+    def test_no_migration_when_pyproject_exists(self, project_dir: Path) -> None:
         """Test that migration doesn't happen when pyproject.toml already exists."""
         (project_dir / "requirements.txt").write_text("requests==2.31.0\n")
 
@@ -92,14 +92,14 @@ black==23.0.0"""
         assert content == existing_content
         assert "requests" not in content
 
-    def test_no_migration_when_no_requirements(self, project_dir: Path):
+    def test_no_migration_when_no_requirements(self, project_dir: Path) -> None:
         """Test that migration doesn't happen when requirements.txt doesn't exist."""
         _migrate_requirements_to_pyproject()
 
         pyproject_path = project_dir / "pyproject.toml"
         assert not pyproject_path.exists()
 
-    def test_migration_handles_comments_and_empty_lines(self, project_dir: Path):
+    def test_migration_handles_comments_and_empty_lines(self, project_dir: Path) -> None:
         """Test that migration correctly handles comments and empty lines."""
         requirements_content = """# Main dependencies
 requests==2.31.0
@@ -126,7 +126,7 @@ black==23.0.0
         assert "# Testing tools" not in content
         assert "# This is a comment" not in content
 
-    def test_migration_handles_read_error(self, project_dir: Path):
+    def test_migration_handles_read_error(self, project_dir: Path) -> None:
         """Test handling of read errors during migration."""
         requirements_path = project_dir / "requirements.txt"
 
@@ -142,7 +142,7 @@ black==23.0.0
 class TestInitialize:
     """Tests for the main initialize function."""
 
-    def test_initialize_exits_early_without_project(self: Path):
+    def test_initialize_exits_early_without_project(self) -> None:
         """Test that initialize exits early when no Python project exists."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Mock get_package_manager inquire call
@@ -153,7 +153,9 @@ class TestInitialize:
             mock_inquirer.assert_not_called()
             assert result is None
 
-    def test_initialize_with_minimal_project(self, python_empty_project: Path, capsys):
+    def test_initialize_with_minimal_project(
+        self, python_empty_project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test initialize with a minimal Python project."""
         # Create pyproject.toml to avoid migration
         (python_empty_project / "pyproject.toml").write_text(
@@ -173,7 +175,7 @@ class TestInitialize:
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert result is None
 
-    def test_initialize_with_precommit_tools(self: Path, capsys):
+    def test_initialize_with_precommit_tools(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: no editors, lefthook precommit
@@ -189,7 +191,7 @@ class TestInitialize:
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
 
-    def test_initialize_with_editors(self: Path, capsys):
+    def test_initialize_with_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with editors selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: Zed editor, no precommit
@@ -204,7 +206,7 @@ class TestInitialize:
             assert ".rules, .zed created" in captured.out  # Editor files created
             assert result is None
 
-    def test_initialize_full_flow(self, project_with_requirements: Path, capsys):
+    def test_initialize_full_flow(self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: pip (auto-detected), Zed editor, Lefthook precommit

@@ -18,7 +18,7 @@ from ultrapyup.pre_commit import options as pre_commit_options
 class TestGetPackageManager:
     """Tests for get_package_manager function."""
 
-    def test_auto_detect_uv_lock(self: Path, capsys):
+    def test_auto_detect_uv_lock(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test auto-detection when uv.lock exists."""
         result = get_package_manager()
 
@@ -31,7 +31,7 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "uv" in captured.out
 
-    def test_auto_detect_requirements_txt(self: Path, capsys):
+    def test_auto_detect_requirements_txt(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test auto-detection when requirements.txt exists."""
         result = get_package_manager()
 
@@ -44,7 +44,7 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "pip" in captured.out
 
-    def test_manual_selection_when_no_lockfile(self: Path):
+    def test_manual_selection_when_no_lockfile(self) -> None:
         """Test manual selection when no lockfile exists."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "uv"
@@ -54,7 +54,7 @@ class TestGetPackageManager:
             assert result.add_cmd == "uv add"
             assert result.lockfile == "uv.lock"
 
-    def test_manual_selection_pip(self: Path):
+    def test_manual_selection_pip(self) -> None:
         """Test manual selection of pip."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "pip"
@@ -64,7 +64,7 @@ class TestGetPackageManager:
             assert result.add_cmd == "pip install"
             assert result.lockfile == "requirements.txt"
 
-    def test_invalid_selection_raises_error(self: Path):
+    def test_invalid_selection_raises_error(self) -> None:
         """Test that invalid selection raises ValueError."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "invalid_manager"
@@ -76,7 +76,7 @@ class TestGetPackageManager:
 class TestInstallDependencies:
     """Tests for install_dependencies function."""
 
-    def test_install_with_uv_no_precommit(self, python_uv_project: Path, capsys):
+    def test_install_with_uv_no_precommit(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with uv and no pre-commit tools."""
         pm = PackageManager("uv", "uv add", "uv.lock")
         install_dependencies(pm, None)
@@ -90,7 +90,7 @@ class TestInstallDependencies:
         assert "ruff" in pyproject
         assert "ty" in pyproject
 
-    def test_install_with_uv_and_precommit(self, python_uv_project: Path, capsys):
+    def test_install_with_uv_and_precommit(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with uv and pre-commit tools."""
         pm = PackageManager("uv", "uv add", "uv.lock")
         install_dependencies(pm, [pre_commit_options[0]])
@@ -105,7 +105,9 @@ class TestInstallDependencies:
         assert "ty" in pyproject
         assert "lefthook" in pyproject
 
-    def test_install_with_pip_no_precommit(self, project_with_requirements: Path, capsys):
+    def test_install_with_pip_no_precommit(
+        self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test installing dependencies with pip and no pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
@@ -128,7 +130,9 @@ class TestInstallDependencies:
         assert any("pytest>=" in dep for dep in dependencies)
         assert any("tqdm>=" in dep for dep in dependencies)
 
-    def test_install_with_pip_and_precommit(self, project_with_requirements: Path, capsys):
+    def test_install_with_pip_and_precommit(
+        self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test installing dependencies with pip and pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
@@ -156,14 +160,14 @@ class TestInstallDependencies:
 class TestRuffConfigSetup:
     """Tests for ruff_config_setup function."""
 
-    def test_no_pyproject_toml(self, capsys):
+    def test_no_pyproject_toml(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test when pyproject.toml doesn't exist."""
         ruff_config_setup()
 
         captured = capsys.readouterr()
         assert "No pyproject.toml found" in captured.out
 
-    def test_invalid_pyproject_toml(self, project_dir: Path, capsys):
+    def test_invalid_pyproject_toml(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test when pyproject.toml is invalid."""
         (project_dir / "pyproject.toml").write_text("invalid toml content {]")
 
@@ -172,7 +176,9 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "Could not read pyproject.toml" in captured.out
 
-    def test_add_ruff_config_to_new_pyproject(self, python_uv_project: Path, capsys):
+    def test_add_ruff_config_to_new_pyproject(
+        self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test adding Ruff config to pyproject.toml without existing Ruff config."""
         ruff_config_setup()
 
@@ -187,7 +193,7 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "Added Ruff config in pyproject.toml" in captured.out
 
-    def test_override_existing_ruff_config(self, python_uv_project: Path, capsys):
+    def test_override_existing_ruff_config(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test overriding existing Ruff configuration."""
         with open(python_uv_project / "pyproject.toml") as f:
             pyproject = toml.load(f)
@@ -220,7 +226,7 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "Override Ruff config in pyproject.toml" in captured.out
 
-    def test_no_venv_lib_directory(self, project_dir: Path, capsys):
+    def test_no_venv_lib_directory(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test when .venv/lib directory doesn't exist."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
@@ -229,7 +235,7 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "No virtualenv site-packages directory found" in captured.out
 
-    def test_no_python_version_in_venv(self, project_dir: Path, capsys):
+    def test_no_python_version_in_venv(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test when no python* directory exists in .venv/lib."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
@@ -242,7 +248,7 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "No virtualenv site-packages directory found" in captured.out
 
-    def test_cross_platform_site_packages_detection(self, project_dir: Path):
+    def test_cross_platform_site_packages_detection(self, project_dir: Path) -> None:
         """Test cross-platform site-packages detection."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
@@ -277,7 +283,7 @@ class TestRuffConfigSetup:
         assert "extend" in pyproject["tool"]["ruff"]
         assert "Lib/site-packages" in pyproject["tool"]["ruff"]["extend"]
 
-    def test_lib64_detection(self, project_dir: Path):
+    def test_lib64_detection(self, project_dir: Path) -> None:
         """Test lib64 path detection for some Linux distributions."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 

@@ -64,7 +64,7 @@ def get_editors() -> list[Editor] | None:
     return editors
 
 
-def editor_setup(editor: Editor):
+def editor_setup(editor: Editor) -> None:
     """Set up editor configuration files by copying them to the current working directory.
 
     Args:

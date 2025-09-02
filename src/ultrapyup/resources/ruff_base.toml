@@ -36,6 +36,7 @@ lint.exclude = [
 
 lint.select = [
     "A",
+    "ANN",
     "ARG",
     "B",
     "C",
@@ -72,7 +73,7 @@ lint.ignore = [
     "EM101",  # Allow `raise ValueError(msg)`
     "EM102",  # Allow f strings in `raise` statements
     "FBT003", # Allow boolean positional values in function calls, like `dict.get(... True)`
-    "S603" # Subject to false positives
+    "S603",   # Subprocess validation input -> Subject to false positives
 ]
 
 # Allow fix for all enabled rules when --fix is provided

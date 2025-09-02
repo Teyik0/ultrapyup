@@ -51,7 +51,7 @@ def get_package_manager() -> PackageManager:
     raise ValueError(f"Unknown package manager: {package_manager}")
 
 
-def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]):
+def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]) -> None:
     """Install dependencies using uv package manager."""
     result = subprocess.run(
         f"{package_manager.add_cmd} {' '.join(dev_deps)} --dev",
@@ -62,7 +62,7 @@ def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]):
         raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
 
 
-def _install_with_pip(dev_deps: list[str]):  # noqa: PLR0912, C901
+def _install_with_pip(dev_deps: list[str]) -> None:  # noqa: PLR0912, C901
     """Install dependencies using pip package manager."""
     venv_path = Path(".venv")
     if venv_path.exists():
@@ -73,7 +73,7 @@ def _install_with_pip(dev_deps: list[str]):  # noqa: PLR0912, C901
     # Fetch latest versions from PyPI for each dependency
     latest_versions = {}
 
-    def get_latest_version(lines: list[str]):
+    def get_latest_version(lines: list[str]) -> None:
         versions_line = lines[1].split("Available versions:")[1].strip()
         if versions_line:
             # Get the first (latest) version
@@ -178,7 +178,7 @@ def install_dependencies(package_manager: PackageManager, pre_commit_tools: list
         )
 
 
-def ruff_config_setup():  # noqa: C901
+def ruff_config_setup() -> None:  # noqa: C901
     """Extends ruff base configuration from local .venv ultrapyup user installation."""
     pyproject_path = Path.cwd() / "pyproject.toml"
 
@@ -248,7 +248,7 @@ def ruff_config_setup():  # noqa: C901
     log.info(f"{action} Ruff config in pyproject.toml (extends {base_config_path})")
 
 
-def ty_config_setup():
+def ty_config_setup() -> None:
     """Add Ty configuration to pyproject.toml with basic root configuration."""
     pyproject_path = Path.cwd() / "pyproject.toml"
 

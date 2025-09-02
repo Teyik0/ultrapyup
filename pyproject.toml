@@ -3,13 +3,11 @@ name = "ultrapyup"
 version = "0.6.0b2"
 description = "A tool to empower your Python projects"
 readme = "README.md"
-authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
 requires-python = ">=3.9"
 dependencies = ["inquirerpy>=0.3.4", "toml>=0.10.2", "typer>=0.16.0"]
-
-[project.urls]
-Homepage = "https://github.com/teyik0/ultrapyup"
-Repository = "https://github.com/teyik0/ultrapyup"
+[[project.authors]]
+name = "teyik0"
+email = "teyik0.fr@icloud.com"
 
 [dependency-groups]
 dev = [
@@ -22,12 +20,16 @@ dev = [
     "ty>=0.0.1a19",
 ]
 
-[project.scripts]
-ultrapyup = "ultrapyup:app"
-
 [build-system]
 requires = ["uv_build>=0.8.0,<0.9"]
 build-backend = "uv_build"
+
+[project.urls]
+Homepage = "https://github.com/teyik0/ultrapyup"
+Repository = "https://github.com/teyik0/ultrapyup"
+
+[project.scripts]
+ultrapyup = "ultrapyup:app"
 
 [tool.ruff]
 extend = "src/ultrapyup/resources/ruff_base.toml"

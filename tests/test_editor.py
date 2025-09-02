@@ -1,6 +1,6 @@
-"""Tests for the editor module."""
-
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from ultrapyup.editor import get_editors
 
@@ -8,7 +8,7 @@ from ultrapyup.editor import get_editors
 class TestGetEditors:
     """Tests for get_editors function."""
 
-    def test_select_single_editor(self, capsys):
+    def test_select_single_editor(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting a single editor."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = ["Zed"]
@@ -25,7 +25,7 @@ class TestGetEditors:
             captured = capsys.readouterr()
             assert "zed" in captured.out
 
-    def test_select_cursor_editor(self, capsys):
+    def test_select_cursor_editor(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting Cursor editor."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = ["Cursor"]
@@ -42,7 +42,7 @@ class TestGetEditors:
             captured = capsys.readouterr()
             assert "cursor" in captured.out
 
-    def test_select_multiple_editors(self, capsys):
+    def test_select_multiple_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting multiple editors."""
         with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = [
@@ -67,7 +67,7 @@ class TestGetEditors:
             assert "cursor" in captured.out
             assert "zed" in captured.out
 
-    def test_select_all_editors(self, capsys):
+    def test_select_all_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test selecting all available editors."""
         with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = [
@@ -100,7 +100,7 @@ class TestGetEditors:
             assert "claude" in output
             assert "codex" in output
 
-    def test_skip_selection(self, capsys):
+    def test_skip_selection(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test skipping editor selection (Ctrl+C)."""
         with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = None
@@ -111,7 +111,7 @@ class TestGetEditors:
             captured = capsys.readouterr()
             assert "none" in captured.out
 
-    def test_empty_selection(self, capsys):
+    def test_empty_selection(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test empty selection (no editors selected)."""
         with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = []
@@ -123,7 +123,7 @@ class TestGetEditors:
             captured = capsys.readouterr()
             assert "none" in captured.out
 
-    def test_inquirer_configuration(self):
+    def test_inquirer_configuration(self) -> None:
         """Test that inquirer is configured correctly."""
         with patch("ultrapyup.editor.inquirer.select") as mock_inquirer:
             mock_select = MagicMock()

@@ -6,8 +6,9 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+from rich.console import Console
 
-from ultrapyup.utils import console, log
+from ultrapyup.utils import Logger, console, log
 
 
 @pytest.fixture
@@ -127,12 +128,12 @@ select = ["E", "F", "I"]
 
 
 @pytest.fixture
-def mock_console():
+def mock_console() -> Console:
     """Create a mock console for testing output."""
     return console
 
 
 @pytest.fixture
-def mock_log():
+def mock_log() -> Logger:
     """Create a mock log for testing output."""
     return log
