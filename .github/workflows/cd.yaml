@@ -67,7 +67,6 @@ jobs:
         run: uv build
 
       - name: Publish to PyPI
-        if: github.repository == 'Teyik0/ultrapyup' && secrets.PYPI_TOKEN != ''
         env:
           UV_PUBLISH_USERNAME: __token__
           UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN }}
