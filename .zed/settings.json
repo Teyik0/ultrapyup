@@ -1,15 +1,31 @@
 {
+  "formatter": "language_server",
+  "format_on_save": "on",
   "lsp": {
     "ty": {
       "binary": {
         "path": ".venv/bin/ty",
-        "arguments": ["server"]
+        "arguments": [
+          "server"
+        ]
+      }
+    },
+    "typescript-language-server": {
+      "settings": {
+        "typescript": {
+          "preferences": {
+            "includePackageJsonAutoImports": "on"
+          }
+        }
       }
     }
   },
   "languages": {
     "Python": {
-      "language_servers": ["ruff", "ty"],
+      "language_servers": [
+        "ruff",
+        "ty"
+      ],
       "format_on_save": "on",
       "formatter": [
         {
@@ -24,6 +40,50 @@
           }
         }
       ]
+    },
+    "JavaScript": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "TypeScript": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "JSX": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "TSX": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
     }
   }
 }

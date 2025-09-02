@@ -69,8 +69,4 @@ def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitT
     else:
         raise ValueError(f"Unsupported package manager for {pre_commit_tool.value} install: {package_manager.name}")
 
-    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        log.info(f"Warning: Failed to install {pre_commit_tool.value} hooks: {result.stderr}")
-    else:
-        log.info(f"Successfully installed {pre_commit_tool.value} hooks")
+    subprocess.run(cmd, check=False, capture_output=True, text=True)
