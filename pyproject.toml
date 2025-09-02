@@ -1,9 +1,9 @@
 [project]
-name = "ultrapy"
-version = "0.1.0"
+name = "ultrapyup"
+version = "0.6.0b5"
 description = "A tool to empower your Python projects"
-readme = "README.md"
 authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["inquirerpy>=0.3.4", "toml>=0.10.2", "typer>=0.16.0"]
 
@@ -13,19 +13,33 @@ dev = [
     "lefthook>=1.12.2",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
-    "ruff>=0.12.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.12.11",
     "ty>=0.0.1a19",
 ]
-
-[project.scripts]
-ultrapy = "ultrapy:app"
 
 [build-system]
 requires = ["uv_build>=0.8.0,<0.9"]
 build-backend = "uv_build"
 
-[tool.uv.workspace]
-members = ["examples/ultrapy-test"]
+[project.urls]
+Homepage = "https://github.com/teyik0/ultrapyup"
+Repository = "https://github.com/teyik0/ultrapyup"
+
+[project.scripts]
+ultrapyup = "ultrapyup:app"
+
+[tool.ruff]
+extend = "src/ultrapyup/resources/ruff_base.toml"
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",    # Allow assert statements
+    "PLR2004", # Allow magic values in tests
+    "SLF001",  # Allow private member access
+]
+
+[tool.ty.environment]
+root = ["./src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -35,8 +49,10 @@ python_functions = ["test_*"]
 addopts = ["-v", "--tb=short", "--strict-markers", "--disable-warnings"]
 
 [tool.coverage.run]
-source = ["src/ultrapy"]
+source = ["src/ultrapyup"]
 branch = true
+parallel = true
+concurrency = ["multiprocessing"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -51,6 +67,7 @@ exclude_lines = [
 show_missing = true
 skip_covered = false
 precision = 2
+fail_under = 80
 
 [tool.coverage.html]
 directory = "htmlcov"

@@ -4,11 +4,13 @@ from pathlib import Path
 
 from InquirerPy import inquirer
 
-from ultrapy.utils import log
+from ultrapyup.utils import log
 
 
 @dataclass
 class Editor:
+    """Configuration for a code editor with associated rule files."""
+
     name: str
     value: str
     file: str
@@ -31,9 +33,13 @@ options = [
 
 
 def get_editors() -> list[Editor] | None:
+    """Get user-selected editors through interactive prompt.
+
+    Returns:
+        List of selected Editor objects, or None if no editors were selected.
+    """
     values = inquirer.select(
-        message="Which editor rules do you want to enable ? "
-        "(optional - skip with ctrl+c)",
+        message="Which editor rules do you want to enable ? (optional - skip with ctrl+c)",
         choices=[editor.name for editor in options],
         multiselect=True,
         qmark="◆ ",
@@ -41,7 +47,7 @@ def get_editors() -> list[Editor] | None:
         pointer="◼ ",
         marker="◻ ",
         marker_pl=" ",
-        transformer=lambda result: "",
+        transformer=lambda _: "",
         keybindings={
             "skip": [{"key": "c-c"}],
         },
@@ -58,7 +64,12 @@ def get_editors() -> list[Editor] | None:
     return editors
 
 
-def editor_setup(editor: Editor):
+def editor_setup(editor: Editor) -> None:
+    """Set up editor configuration files by copying them to the current working directory.
+
+    Args:
+        editor: Editor configuration containing file paths and settings.
+    """
     current_file = Path(__file__)
     editor_file = current_file.parent / "resources" / editor.file
     editor_rule_file = current_file.parent / "resources" / editor.rule_file

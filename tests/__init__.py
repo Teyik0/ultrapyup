@@ -1,1 +1,1 @@
-"""Tests for ultrapy package."""
+"""Tests for ultrapyup package."""

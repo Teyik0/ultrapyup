@@ -1,0 +1,114 @@
+name: Ultrapyup - CD
+
+on:
+  push:
+    branches: [main, dev]
+    paths-ignore:
+      - pyproject.toml
+      - uv.lock
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          version: "0.8.14"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run ruff check
+        run: uv run ruff check --output-format=github .
+
+      - name: Run type check
+        run: uv run ty check .
+
+      - name: Run tests
+        run: uv run pytest -n auto tests --cov
+
+      - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
+        id: bump_type
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          branch: ${{ github.ref_name }}
+
+      - name: Bump version in pyproject.toml and add beta suffix for dev branch
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          if [[ "${{ steps.bump_type.outputs.current }}" == *"beta"* ]]; then
+            uv version --bump beta
+          else
+            uv version --bump ${{ steps.bump_type.outputs.bump }} --bump beta
+          fi
+
+      - name: Bump version in pyproject.toml for main branch
+        if: github.ref == 'refs/heads/main'
+        run: uv version --bump stable
+
+      - name: Set next version
+        id: bump_version
+        run: |
+          BUMP_VERSION=$(uv version --short)
+          echo "Next version: ${BUMP_VERSION}"
+          echo "new_version=$BUMP_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_USERNAME: __token__
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump_version.outputs.new_version }}
+          name: v${{ steps.bump_version.outputs.new_version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          generate_release_notes: true
+
+      - name: Transform version for beta release
+        if: github.ref == 'refs/heads/dev'
+        id: beta_version
+        run: |
+          version="${{ steps.bump_version.outputs.new_version }}"
+          base_version="${version%b*}"
+          beta_number="${version#*b}"
+          formatted_version="${base_version}-beta.${beta_number}"
+          echo "formatted_version=${formatted_version}" >> $GITHUB_OUTPUT
+
+      - name: Create Beta Release
+        if: github.ref == 'refs/heads/dev'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.beta_version.outputs.formatted_version }}
+          name: v${{ steps.beta_version.outputs.formatted_version }}
+          target_commitish: ${{ github.sha }}
+          draft: false
+          prerelease: true
+          files: dist/*
+          generate_release_notes: true
+
+      - name: Push version changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add pyproject.toml uv.lock
+          git commit -m "chore: bump version [skip ci]" || exit 0
+          git push

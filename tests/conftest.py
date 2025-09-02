@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import tempfile
@@ -5,6 +6,9 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+from rich.console import Console
+
+from ultrapyup.utils import Logger, console, log
 
 
 @pytest.fixture
@@ -22,9 +26,6 @@ def project_dir(temp_dir: Path) -> Generator[Path, None, None]:
     """Create a temporary project directory and change to it."""
     original_dir = Path.cwd()
     try:
-        # Change to temp directory
-        import os
-
         os.chdir(temp_dir)
         yield temp_dir
     finally:
@@ -36,14 +37,15 @@ def project_dir(temp_dir: Path) -> Generator[Path, None, None]:
 def python_uv_project(project_dir: Path) -> Path:
     """Create a basic Python project with uv init."""
     subprocess.run(
-        ["uv", "init", "--name", "test-project", "--lib"],
+        [shutil.which("uv") or "uv", "init", "--name", "test-project", "--lib"],
         cwd=project_dir,
         capture_output=True,
         check=False,
+        shell=False,
     )
 
     subprocess.run(
-        ["uv", "sync"],
+        [shutil.which("uv") or "uv", "sync"],
         cwd=project_dir,
         capture_output=True,
         check=False,
@@ -56,7 +58,7 @@ def python_uv_project(project_dir: Path) -> Path:
 def python_empty_project(project_dir: Path) -> Path:
     """Create a Python project with just a .venv directory."""
     subprocess.run(
-        ["python", "-m", "venv", ".venv"],
+        [shutil.which("python") or "python", "-m", "venv", ".venv"],
         cwd=project_dir,
         capture_output=True,
         check=True,
@@ -72,7 +74,7 @@ def project_with_requirements(python_empty_project: Path) -> Path:
 requests==2.31.0
 pytest>=7.0.0
 # Comment line
-black==23.0.0
+tqdm>=4.67.1
 
 # Empty lines above and below
 
@@ -81,25 +83,6 @@ ruff>=0.1.0
     (python_empty_project / "requirements.txt").write_text(requirements_content)
 
     return python_empty_project
-
-
-@pytest.fixture
-def project_with_pyproject(python_project: Path) -> Path:
-    """Create a project with pyproject.toml and add requests and pytest using uv add."""
-    subprocess.run(
-        ["uv", "add", "requests"],
-        cwd=python_project,
-        capture_output=True,
-        check=True,
-    )
-
-    subprocess.run(
-        ["uv", "add", "requests", "--dev"],
-        cwd=python_project,
-        capture_output=True,
-        check=True,
-    )
-    return python_project
 
 
 @pytest.fixture
@@ -127,12 +110,12 @@ ignore = ["E501"]
     site_packages.mkdir(parents=True)
 
     # Create ultrapy package structure in site-packages
-    ultrapy_path = site_packages / "ultrapy"
+    ultrapy_path = site_packages / "ultrapyup"
     resources_path = ultrapy_path / "resources"
     resources_path.mkdir(parents=True)
 
     # Create ruff_base.toml
-    ruff_base_content = """# Ultrapy base Ruff configuration
+    ruff_base_content = """# Ultrapyup base Ruff configuration
 line-length = 88
 target-version = "py310"
 
@@ -145,16 +128,12 @@ select = ["E", "F", "I"]
 
 
 @pytest.fixture
-def mock_console():
+def mock_console() -> Console:
     """Create a mock console for testing output."""
-    from ultrapy.utils import console
-
     return console
 
 
 @pytest.fixture
-def mock_log():
+def mock_log() -> Logger:
     """Create a mock log for testing output."""
-    from ultrapy.utils import log
-
     return log
