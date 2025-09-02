@@ -29,7 +29,7 @@ repos:
       # Pre-push stage hooks (run on git push)
       - id: pytest
         name: pytest
-        entry: uv run pytest -n auto tests --cov
+        entry: uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
         language: system
         pass_filenames: false
         always_run: true

@@ -34,7 +34,9 @@ jobs:
         run: uv run ty check .
 
       - name: Run tests
-        run: uv run pytest -n auto tests --cov
+        run: |
+          uv tool install poetry
+          uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
         if: github.ref == 'refs/heads/dev'
