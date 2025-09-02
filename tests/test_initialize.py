@@ -1,5 +1,3 @@
-"""Tests for the initialize module."""
-
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,7 +13,7 @@ from ultrapyup.initialize import (
 class TestCheckPythonProject:
     """Tests for _check_python_project function."""
 
-    def test_no_python_project(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_no_python_project(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
         """Test when no Python project files exist."""
         result = _check_python_project()
 
@@ -47,7 +45,7 @@ class TestCheckPythonProject:
         assert "tqdm>=4.67.1" in content
         assert "ruff>=0.1.0" in content
 
-    def test_with_pyproject_toml(self) -> None:
+    def test_with_pyproject_toml(self, python_uv_project: Path) -> None:  # noqa: ARG002
         """Test when pyproject.toml exists."""
         result = _check_python_project()
 
@@ -142,7 +140,7 @@ black==23.0.0
 class TestInitialize:
     """Tests for the main initialize function."""
 
-    def test_initialize_exits_early_without_project(self) -> None:
+    def test_initialize_exits_early_without_project(self, project_dir: Path) -> None:  # noqa: ARG002
         """Test that initialize exits early when no Python project exists."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Mock get_package_manager inquire call
@@ -175,7 +173,7 @@ class TestInitialize:
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert result is None
 
-    def test_initialize_with_precommit_tools(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: no editors, lefthook precommit
@@ -191,10 +189,9 @@ class TestInitialize:
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
 
-    def test_initialize_with_editors(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_initialize_with_editors(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
         """Test initialize with editors selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Set up inquirer mock to return choices: Zed editor, no precommit
             mock_inquirer.return_value.execute.side_effect = [["Zed"], []]
 
             result = initialize()
@@ -209,8 +206,9 @@ class TestInitialize:
     def test_initialize_full_flow(self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Set up inquirer mock to return choices: pip (auto-detected), Zed editor, Lefthook precommit
+            # Set up inquirer mock to return choices: Zed editor, Lefthook precommit
             mock_inquirer.return_value.execute.side_effect = [
+                "pip",
                 ["Zed"],
                 ["Lefthook"],
             ]

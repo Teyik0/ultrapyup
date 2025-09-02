@@ -5,6 +5,7 @@ from pathlib import Path
 
 from InquirerPy import inquirer
 
+from ultrapyup.package_manager import PackageManager
 from ultrapyup.utils import log
 
 
@@ -51,14 +52,20 @@ def get_precommit_tool() -> list[PreCommitTool] | None:
     return pre_commit_tools
 
 
-def precommit_setup(add_cmd: str, pre_commit_tool: PreCommitTool) -> None:
+def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitTool) -> None:
     """Set up pre-commit tool by copying configuration file and installing hooks."""
     current_file = Path(__file__)
     lefthook_source = current_file.parent / "resources" / pre_commit_tool.filename
 
     shutil.copy2(lefthook_source, Path.cwd() / pre_commit_tool.filename)
-    subprocess.run(
-        f"{add_cmd} {pre_commit_tool.value} install",
-        check=False,
-        capture_output=True,
-    )
+
+    # Install the pre-commit tool if it's not already installed
+    package_manager.add([pre_commit_tool.value])
+
+    # Install hooks for tools like lefthook
+    if pre_commit_tool.value == "lefthook":
+        subprocess.run(
+            [shutil.which("lefthook") or "lefthook", "install"],
+            check=False,
+            capture_output=True,
+        )

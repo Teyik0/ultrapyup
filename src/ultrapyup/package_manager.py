@@ -1,12 +1,16 @@
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import toml
 from InquirerPy import inquirer
 
-from ultrapyup.pre_commit import PreCommitTool
 from ultrapyup.utils import console, file_exist, log
+
+
+if TYPE_CHECKING:
+    from ultrapyup.pre_commit import PreCommitTool
 
 
 @dataclass
@@ -14,20 +18,145 @@ class PackageManager:
     """Represents a package manager with its configuration details."""
 
     name: str
-    add_cmd: str
-    lockfile: str
+    lockfile: str | None
+
+    def add(self, packages: list[str]) -> None:
+        """Add packages using the appropriate package manager.
+
+        Args:
+            packages: List of package names to install
+        """
+        if self.name == "uv":
+            self._add_with_uv(packages)
+        elif self.name == "pip":
+            self._add_with_pip(packages)
+        else:
+            raise ValueError(f"Unsupported package manager: {self.name}")
+
+    def _add_with_uv(self, packages: list[str]) -> None:
+        """Install packages using uv."""
+        cmd = ["uv", "add", *packages, "--dev"]
+
+        result = subprocess.run(cmd, check=False, capture_output=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
+
+    def _add_with_pip(self, packages: list[str]) -> None:
+        """Install packages using pip."""
+        # Determine pip command path
+        venv_path = Path(".venv")
+        if venv_path.exists():
+            pip_cmd = ".venv/bin/pip" if not Path(".venv/Scripts").exists() else ".venv/Scripts/pip"
+        else:
+            pip_cmd = "pip"
+
+        self._add_dev_dependencies_to_pyproject(packages, pip_cmd)
+
+    def _add_dev_dependencies_to_pyproject(self, packages: list[str], pip_cmd: str) -> None:  # noqa
+        """Add development dependencies to pyproject.toml and install them."""
+        # Fetch latest versions from PyPI for each dependency
+        latest_versions = {}
+
+        def get_latest_version(lines: list[str]) -> None:
+            versions_line = lines[1].split("Available versions:")[1].strip()
+            if versions_line:
+                # Get the first (latest) version
+                latest_version = versions_line.split(",")[0].strip()
+                latest_versions[dep] = latest_version
+                return
+
+        for dep in packages:
+            result = subprocess.run(
+                [pip_cmd, "index", "versions", dep],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                get_latest_version(lines)
+            else:
+                result = subprocess.run(
+                    [pip_cmd, "index", "versions", dep, "--pre"],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split("\n")
+                    get_latest_version(lines)
+                else:
+                    latest_versions[dep] = "*"
+
+        # Update pyproject.toml with dev dependencies
+        pyproject_path = Path("pyproject.toml")
+        with open(pyproject_path) as f:
+            config = toml.load(f)
+            if "dependency-groups" not in config:
+                config["dependency-groups"] = {}
+
+            existing_dev_deps = config["dependency-groups"].get("dev", [])
+            existing_packages = set()
+            for dep_spec in existing_dev_deps:
+                package_name = (
+                    dep_spec.split("==")[0].split(">=")[0].split("<=")[0].split("~=")[0].split("!=")[0].strip()
+                )
+                existing_packages.add(package_name)
+
+            # Only add NEW packages
+            for dep in packages:
+                if dep not in existing_packages:
+                    version = latest_versions.get(dep, "*")
+                    if version != "*":
+                        existing_dev_deps.append(f"{dep}>={version}")
+                    else:
+                        existing_dev_deps.append(dep)
+
+            config["dependency-groups"]["dev"] = existing_dev_deps
+
+        with open(pyproject_path, "w") as f:
+            toml.dump(config, f)
+
+        # Install the dependencies
+        result = subprocess.run(
+            [pip_cmd, "install", "--upgrade", "pip"],
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to upgrade pip: {result.stderr.decode() if result.stderr else 'Unknown error'}")
+
+        result = subprocess.run(
+            [pip_cmd, "install", "."],
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Failed to install package: {result.stderr.decode() if result.stderr else 'Unknown error'}"
+            )
+
+        result = subprocess.run(
+            [pip_cmd, "install", "--group", "dev"],
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Failed to install dev dependencies: {result.stderr.decode() if result.stderr else 'Unknown error'}"
+            )
 
 
 options: list[PackageManager] = [
-    PackageManager("uv", "uv add", "uv.lock"),
-    PackageManager("pip", "pip install", "requirements.txt"),
+    PackageManager("uv", "uv.lock"),
+    PackageManager("pip", None),
 ]
 
 
 def get_package_manager() -> PackageManager:
     """Detect or prompt for package manager selection based on lockfiles or user input."""
     for package_manager in options:
-        if file_exist(Path(package_manager.lockfile)):
+        if package_manager.lockfile and file_exist(Path(package_manager.lockfile)):
             log.title("Package manager auto detected")
             log.info(package_manager.name)
             return package_manager
@@ -51,124 +180,14 @@ def get_package_manager() -> PackageManager:
     raise ValueError(f"Unknown package manager: {package_manager}")
 
 
-def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]) -> None:
-    """Install dependencies using uv package manager."""
-    result = subprocess.run(
-        f"{package_manager.add_cmd} {' '.join(dev_deps)} --dev",
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
-
-
-def _install_with_pip(dev_deps: list[str]) -> None:  # noqa: PLR0912, C901
-    """Install dependencies using pip package manager."""
-    venv_path = Path(".venv")
-    if venv_path.exists():
-        pip_cmd = ".venv/bin/pip" if not Path(".venv/Scripts").exists() else ".venv/Scripts/pip"
-    else:
-        pip_cmd = "pip"
-
-    # Fetch latest versions from PyPI for each dependency
-    latest_versions = {}
-
-    def get_latest_version(lines: list[str]) -> None:
-        versions_line = lines[1].split("Available versions:")[1].strip()
-        if versions_line:
-            # Get the first (latest) version
-            latest_version = versions_line.split(",")[0].strip()
-            latest_versions[dep] = latest_version
-            return
-
-    for dep in dev_deps:
-        result = subprocess.run(
-            f"{pip_cmd} index versions {dep}",
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode == 0:
-            lines = result.stdout.strip().split("\n")
-            get_latest_version(lines)
-        else:
-            result = subprocess.run(
-                f"{pip_cmd} index versions {dep} --pre",
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
-                get_latest_version(lines)
-            else:
-                latest_versions[dep] = "*"
-
-    # Update pyproject.toml with dev dependencies using toml library
-    pyproject_path = Path("pyproject.toml")
-    with open(pyproject_path) as f:
-        config = toml.load(f)
-        if "dependency-groups" not in config:
-            config["dependency-groups"] = {}
-
-        existing_dev_deps = config["dependency-groups"].get("dev", [])
-        existing_packages = set()
-        for dep_spec in existing_dev_deps:
-            package_name = dep_spec.split("==")[0].split(">=")[0].split("<=")[0].split("~=")[0].split("!=")[0].strip()
-            existing_packages.add(package_name)
-
-        # Only add NEW packages from dev_deps
-        for dep in dev_deps:
-            if dep not in existing_packages:  # Only if it doesn't already exist
-                version = latest_versions.get(dep, "*")
-                if version != "*":
-                    existing_dev_deps.append(f"{dep}>={version}")
-                else:
-                    existing_dev_deps.append(dep)
-
-        config["dependency-groups"]["dev"] = existing_dev_deps
-
-    with open(pyproject_path, "w") as f:
-        toml.dump(config, f)
-
-    result = subprocess.run(
-        f"{pip_cmd} install --upgrade pip",
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"Failed to upgrade pip: {result.stderr.decode() if result.stderr else 'Unknown error'}")
-
-    result = subprocess.run(
-        f"{pip_cmd} install .",
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"Failed to install package: {result.stderr.decode() if result.stderr else 'Unknown error'}")
-
-    result = subprocess.run(
-        f"{pip_cmd} install --group dev",
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"Failed to install dev dependencies: {result.stderr.decode() if result.stderr else 'Unknown error'}"
-        )
-
-
-def install_dependencies(package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None) -> None:
+def install_dependencies(package_manager: PackageManager, pre_commit_tools: list["PreCommitTool"] | None) -> None:
     """Install development dependencies using the specified package manager."""
     dev_deps = ["ruff", "ty", "ultrapyup"]
     if pre_commit_tools:
         dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
 
     with console.status("[bold green]Installing dependencies"):
-        if package_manager.name == "uv":
-            _install_with_uv(package_manager, dev_deps)
-        else:
-            _install_with_pip(dev_deps)
+        package_manager.add(dev_deps)
 
         log.title("Dependencies installed")
         log.info(

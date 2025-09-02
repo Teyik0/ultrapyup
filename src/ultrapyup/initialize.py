@@ -62,8 +62,6 @@ def _check_python_project() -> bool:
         log.info("Please initialize a Python project first with: uv init")
         return False
 
-    _migrate_requirements_to_pyproject()
-
     return True
 
 
@@ -71,6 +69,9 @@ def initialize() -> None:
     """Initialize and configure a Python project with development tools."""
     if not _check_python_project():
         return
+
+    # Migrate requirements.txt to pyproject.toml if needed
+    _migrate_requirements_to_pyproject()
 
     # Ask user's preferences
     package_manager = get_package_manager()
@@ -84,7 +85,7 @@ def initialize() -> None:
 
     if pre_commit_tools:
         for tool in pre_commit_tools:
-            precommit_setup(package_manager.add_cmd, tool)
+            precommit_setup(package_manager, tool)
         log.title("Pre-commit setup completed")
         log.info(f"{', '.join(tool.filename for tool in pre_commit_tools)} created")
 

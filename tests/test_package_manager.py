@@ -10,6 +10,7 @@ from ultrapyup.package_manager import (
     PackageManager,
     get_package_manager,
     install_dependencies,
+    options,
     ruff_config_setup,
 )
 from ultrapyup.pre_commit import options as pre_commit_options
@@ -24,25 +25,11 @@ class TestGetPackageManager:
 
         assert isinstance(result, PackageManager)
         assert result.name == "uv"
-        assert result.add_cmd == "uv add"
         assert result.lockfile == "uv.lock"
 
         captured = capsys.readouterr()
         assert "Package manager auto detected" in captured.out
         assert "uv" in captured.out
-
-    def test_auto_detect_requirements_txt(self, capsys: pytest.CaptureFixture[str]) -> None:
-        """Test auto-detection when requirements.txt exists."""
-        result = get_package_manager()
-
-        assert isinstance(result, PackageManager)
-        assert result.name == "pip"
-        assert result.add_cmd == "pip install"
-        assert result.lockfile == "requirements.txt"
-
-        captured = capsys.readouterr()
-        assert "Package manager auto detected" in captured.out
-        assert "pip" in captured.out
 
     def test_manual_selection_when_no_lockfile(self) -> None:
         """Test manual selection when no lockfile exists."""
@@ -51,20 +38,18 @@ class TestGetPackageManager:
             result = get_package_manager()
 
             assert result.name == "uv"
-            assert result.add_cmd == "uv add"
             assert result.lockfile == "uv.lock"
 
-    def test_manual_selection_pip(self) -> None:
+    def test_manual_selection_pip(self, project_with_requirements: Path) -> None:  # noqa
         """Test manual selection of pip."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "pip"
             result = get_package_manager()
 
             assert result.name == "pip"
-            assert result.add_cmd == "pip install"
-            assert result.lockfile == "requirements.txt"
+            assert result.lockfile is None
 
-    def test_invalid_selection_raises_error(self) -> None:
+    def test_invalid_selection_raises_error(self, project_dir: Path) -> None:  # noqa
         """Test that invalid selection raises ValueError."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "invalid_manager"
@@ -78,8 +63,7 @@ class TestInstallDependencies:
 
     def test_install_with_uv_no_precommit(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with uv and no pre-commit tools."""
-        pm = PackageManager("uv", "uv add", "uv.lock")
-        install_dependencies(pm, None)
+        install_dependencies(options[0], None)
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -92,8 +76,7 @@ class TestInstallDependencies:
 
     def test_install_with_uv_and_precommit(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with uv and pre-commit tools."""
-        pm = PackageManager("uv", "uv add", "uv.lock")
-        install_dependencies(pm, [pre_commit_options[0]])
+        install_dependencies(options[0], [pre_commit_options[0]])
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -109,9 +92,8 @@ class TestInstallDependencies:
         self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test installing dependencies with pip and no pre-commit tools."""
-        pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
-        install_dependencies(pm, None)
+        install_dependencies(options[1], None)
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -134,9 +116,8 @@ class TestInstallDependencies:
         self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test installing dependencies with pip and pre-commit tools."""
-        pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
-        install_dependencies(pm, [pre_commit_options[0]])
+        install_dependencies(options[1], [pre_commit_options[0]])
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -160,7 +141,7 @@ class TestInstallDependencies:
 class TestRuffConfigSetup:
     """Tests for ruff_config_setup function."""
 
-    def test_no_pyproject_toml(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_no_pyproject_toml(self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa
         """Test when pyproject.toml doesn't exist."""
         ruff_config_setup()
 
