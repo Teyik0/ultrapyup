@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import tempfile
@@ -5,6 +6,8 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+
+from ultrapyup.utils import console, log
 
 
 @pytest.fixture
@@ -22,9 +25,6 @@ def project_dir(temp_dir: Path) -> Generator[Path, None, None]:
     """Create a temporary project directory and change to it."""
     original_dir = Path.cwd()
     try:
-        # Change to temp directory
-        import os
-
         os.chdir(temp_dir)
         yield temp_dir
     finally:
@@ -36,14 +36,15 @@ def project_dir(temp_dir: Path) -> Generator[Path, None, None]:
 def python_uv_project(project_dir: Path) -> Path:
     """Create a basic Python project with uv init."""
     subprocess.run(
-        ["uv", "init", "--name", "test-project", "--lib"],
+        [shutil.which("uv") or "uv", "init", "--name", "test-project", "--lib"],
         cwd=project_dir,
         capture_output=True,
         check=False,
+        shell=False,
     )
 
     subprocess.run(
-        ["uv", "sync"],
+        [shutil.which("uv") or "uv", "sync"],
         cwd=project_dir,
         capture_output=True,
         check=False,
@@ -56,7 +57,7 @@ def python_uv_project(project_dir: Path) -> Path:
 def python_empty_project(project_dir: Path) -> Path:
     """Create a Python project with just a .venv directory."""
     subprocess.run(
-        ["python", "-m", "venv", ".venv"],
+        [shutil.which("python") or "python", "-m", "venv", ".venv"],
         cwd=project_dir,
         capture_output=True,
         check=True,
@@ -128,14 +129,10 @@ select = ["E", "F", "I"]
 @pytest.fixture
 def mock_console():
     """Create a mock console for testing output."""
-    from ultrapyup.utils import console
-
     return console
 
 
 @pytest.fixture
 def mock_log():
     """Create a mock log for testing output."""
-    from ultrapyup.utils import log
-
     return log

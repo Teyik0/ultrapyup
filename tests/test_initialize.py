@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from ultrapyup.initialize import (
     _check_python_project,
     _migrate_requirements_to_pyproject,
@@ -13,7 +15,7 @@ from ultrapyup.initialize import (
 class TestCheckPythonProject:
     """Tests for _check_python_project function."""
 
-    def test_no_python_project(self, project_dir: Path, capsys):
+    def test_no_python_project(self: Path, capsys):
         """Test when no Python project files exist."""
         result = _check_python_project()
 
@@ -45,7 +47,7 @@ class TestCheckPythonProject:
         assert "tqdm>=4.67.1" in content
         assert "ruff>=0.1.0" in content
 
-    def test_with_pyproject_toml(self, python_uv_project: Path):
+    def test_with_pyproject_toml(self: Path):
         """Test when pyproject.toml exists."""
         result = _check_python_project()
 
@@ -130,8 +132,6 @@ black==23.0.0
 
         requirements_path.write_bytes(b"\xff\xfe")  # Invalid UTF-8
 
-        import pytest
-
         with pytest.raises(UnicodeDecodeError):
             _migrate_requirements_to_pyproject()
 
@@ -142,7 +142,7 @@ black==23.0.0
 class TestInitialize:
     """Tests for the main initialize function."""
 
-    def test_initialize_exits_early_without_project(self, project_dir: Path):
+    def test_initialize_exits_early_without_project(self: Path):
         """Test that initialize exits early when no Python project exists."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Mock get_package_manager inquire call
@@ -170,12 +170,10 @@ class TestInitialize:
             assert "uv" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "ruff, ty, ultrapyup" in captured.out  # Dependencies list
-            assert (
-                "Ruff configuration setup completed" in captured.out
-            )  # From ruff_config_setup
+            assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert result is None
 
-    def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys):
+    def test_initialize_with_precommit_tools(self: Path, capsys):
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: no editors, lefthook precommit
@@ -186,14 +184,12 @@ class TestInitialize:
             assert "uv" in captured.out  # Package manager auto-detected
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "lefthook" in captured.out  # Precommit tool in dependencies and logs
-            assert (
-                "Ruff configuration setup completed" in captured.out
-            )  # From ruff_config_setup
+            assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
 
-    def test_initialize_with_editors(self, python_uv_project: Path, capsys):
+    def test_initialize_with_editors(self: Path, capsys):
         """Test initialize with editors selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: Zed editor, no precommit
@@ -203,9 +199,7 @@ class TestInitialize:
             captured = capsys.readouterr()
             assert "uv" in captured.out  # Package manager auto-detected
             assert "Dependencies installed" in captured.out  # From install_dependencies
-            assert (
-                "Ruff configuration setup completed" in captured.out
-            )  # From ruff_config_setup
+            assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "Editor setup completed" in captured.out  # From editor setup
             assert ".rules, .zed created" in captured.out  # Editor files created
             assert result is None
@@ -228,9 +222,7 @@ class TestInitialize:
             assert "pip" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "lefthook" in captured.out  # Precommit tool in dependencies
-            assert (
-                "Ruff configuration setup completed" in captured.out
-            )  # From ruff_config_setup
+            assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert "Editor setup completed" in captured.out  # From editor setup

@@ -129,6 +129,8 @@ class TestLog:
 
 
 class TestConsole:
+    """Tests for console utility functions."""
+
     def test_console_print(self, capsys):
         """Test console.print functionality."""
         console.print("Test message")

@@ -1,6 +1,8 @@
+import shutil
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 import toml
 
 from ultrapyup.initialize import _migrate_requirements_to_pyproject
@@ -16,9 +18,8 @@ from ultrapyup.pre_commit import options as pre_commit_options
 class TestGetPackageManager:
     """Tests for get_package_manager function."""
 
-    def test_auto_detect_uv_lock(self, python_uv_project: Path, capsys):
+    def test_auto_detect_uv_lock(self: Path, capsys):
         """Test auto-detection when uv.lock exists."""
-
         result = get_package_manager()
 
         assert isinstance(result, PackageManager)
@@ -30,9 +31,7 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "uv" in captured.out
 
-    def test_auto_detect_requirements_txt(
-        self, project_with_requirements: Path, capsys
-    ):
+    def test_auto_detect_requirements_txt(self: Path, capsys):
         """Test auto-detection when requirements.txt exists."""
         result = get_package_manager()
 
@@ -45,7 +44,7 @@ class TestGetPackageManager:
         assert "Package manager auto detected" in captured.out
         assert "pip" in captured.out
 
-    def test_manual_selection_when_no_lockfile(self, python_empty_project: Path):
+    def test_manual_selection_when_no_lockfile(self: Path):
         """Test manual selection when no lockfile exists."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "uv"
@@ -55,7 +54,7 @@ class TestGetPackageManager:
             assert result.add_cmd == "uv add"
             assert result.lockfile == "uv.lock"
 
-    def test_manual_selection_pip(self, python_empty_project: Path):
+    def test_manual_selection_pip(self: Path):
         """Test manual selection of pip."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "pip"
@@ -65,16 +64,12 @@ class TestGetPackageManager:
             assert result.add_cmd == "pip install"
             assert result.lockfile == "requirements.txt"
 
-    def test_invalid_selection_raises_error(self, project_dir: Path):
+    def test_invalid_selection_raises_error(self: Path):
         """Test that invalid selection raises ValueError."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "invalid_manager"
 
-            import pytest
-
-            with pytest.raises(
-                ValueError, match="Unknown package manager: invalid_manager"
-            ):
+            with pytest.raises(ValueError, match="Unknown package manager: invalid_manager"):
                 get_package_manager()
 
 
@@ -110,9 +105,7 @@ class TestInstallDependencies:
         assert "ty" in pyproject
         assert "lefthook" in pyproject
 
-    def test_install_with_pip_no_precommit(
-        self, project_with_requirements: Path, capsys
-    ):
+    def test_install_with_pip_no_precommit(self, project_with_requirements: Path, capsys):
         """Test installing dependencies with pip and no pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
@@ -135,9 +128,7 @@ class TestInstallDependencies:
         assert any("pytest>=" in dep for dep in dependencies)
         assert any("tqdm>=" in dep for dep in dependencies)
 
-    def test_install_with_pip_and_precommit(
-        self, project_with_requirements: Path, capsys
-    ):
+    def test_install_with_pip_and_precommit(self, project_with_requirements: Path, capsys):
         """Test installing dependencies with pip and pre-commit tools."""
         pm = PackageManager("pip", "pip install", "requirements.txt")
         _migrate_requirements_to_pyproject()
@@ -165,7 +156,7 @@ class TestInstallDependencies:
 class TestRuffConfigSetup:
     """Tests for ruff_config_setup function."""
 
-    def test_no_pyproject_toml(self, project_dir: Path, capsys):
+    def test_no_pyproject_toml(self, capsys):
         """Test when pyproject.toml doesn't exist."""
         ruff_config_setup()
 
@@ -185,15 +176,10 @@ class TestRuffConfigSetup:
         """Test adding Ruff config to pyproject.toml without existing Ruff config."""
         ruff_config_setup()
 
-        import toml
-
         updated_toml = toml.load(python_uv_project / "pyproject.toml")
         assert "tool" in updated_toml
         assert "ruff" in updated_toml["tool"]
-        assert (
-            "site-packages/ultrapyup/resources/ruff_base.toml"
-            in updated_toml["tool"]["ruff"]["extend"]
-        )
+        assert "site-packages/ultrapyup/resources/ruff_base.toml" in updated_toml["tool"]["ruff"]["extend"]
 
         # Original content should still be there
         assert updated_toml["project"]["name"] == "test-project"
@@ -203,8 +189,6 @@ class TestRuffConfigSetup:
 
     def test_override_existing_ruff_config(self, python_uv_project: Path, capsys):
         """Test overriding existing Ruff configuration."""
-        import toml
-
         with open(python_uv_project / "pyproject.toml") as f:
             pyproject = toml.load(f)
 
@@ -227,10 +211,7 @@ class TestRuffConfigSetup:
         # New ruff config should be there
         assert "tool" in updated_toml
         assert "ruff" in updated_toml["tool"]
-        assert (
-            "site-packages/ultrapyup/resources/ruff_base.toml"
-            in updated_toml["tool"]["ruff"]["extend"]
-        )
+        assert "site-packages/ultrapyup/resources/ruff_base.toml" in updated_toml["tool"]["ruff"]["extend"]
 
         # Other sections should remain
         assert "other" in updated_toml["tool"]
@@ -261,24 +242,14 @@ class TestRuffConfigSetup:
         captured = capsys.readouterr()
         assert "No virtualenv site-packages directory found" in captured.out
 
-    def test_cross_platform_site_packages_detection(self, project_dir: Path, capsys):
+    def test_cross_platform_site_packages_detection(self, project_dir: Path):
         """Test cross-platform site-packages detection."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
         # Test Linux/macOS path detection (.venv/lib/python3.x/site-packages)
-        linux_site_packages = (
-            project_dir
-            / ".venv"
-            / "lib"
-            / "python3.12"
-            / "site-packages"
-            / "ultrapyup"
-            / "resources"
-        )
+        linux_site_packages = project_dir / ".venv" / "lib" / "python3.12" / "site-packages" / "ultrapyup" / "resources"
         linux_site_packages.mkdir(parents=True)
-        (linux_site_packages / "ruff_base.toml").write_text(
-            "[tool.ruff]\nline-length = 88"
-        )
+        (linux_site_packages / "ruff_base.toml").write_text("[tool.ruff]\nline-length = 88")
 
         ruff_config_setup()
 
@@ -289,20 +260,13 @@ class TestRuffConfigSetup:
         assert "extend" in pyproject["tool"]["ruff"]
         assert "lib/python3.12/site-packages" in pyproject["tool"]["ruff"]["extend"]
 
-        # Clean up for Windows test
-        import shutil
-
         shutil.rmtree(project_dir / ".venv")
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
         # Test Windows path detection (.venv/Lib/site-packages)
-        windows_site_packages = (
-            project_dir / ".venv" / "Lib" / "site-packages" / "ultrapyup" / "resources"
-        )
+        windows_site_packages = project_dir / ".venv" / "Lib" / "site-packages" / "ultrapyup" / "resources"
         windows_site_packages.mkdir(parents=True)
-        (windows_site_packages / "ruff_base.toml").write_text(
-            "[tool.ruff]\nline-length = 88"
-        )
+        (windows_site_packages / "ruff_base.toml").write_text("[tool.ruff]\nline-length = 88")
 
         ruff_config_setup()
 
@@ -313,24 +277,16 @@ class TestRuffConfigSetup:
         assert "extend" in pyproject["tool"]["ruff"]
         assert "Lib/site-packages" in pyproject["tool"]["ruff"]["extend"]
 
-    def test_lib64_detection(self, project_dir: Path, capsys):
+    def test_lib64_detection(self, project_dir: Path):
         """Test lib64 path detection for some Linux distributions."""
         (project_dir / "pyproject.toml").write_text("[project]\nname = 'test'\n")
 
         # Test lib64 path detection (.venv/lib64/python3.x/site-packages)
         lib64_site_packages = (
-            project_dir
-            / ".venv"
-            / "lib64"
-            / "python3.11"
-            / "site-packages"
-            / "ultrapyup"
-            / "resources"
+            project_dir / ".venv" / "lib64" / "python3.11" / "site-packages" / "ultrapyup" / "resources"
         )
         lib64_site_packages.mkdir(parents=True)
-        (lib64_site_packages / "ruff_base.toml").write_text(
-            "[tool.ruff]\nline-length = 88"
-        )
+        (lib64_site_packages / "ruff_base.toml").write_text("[tool.ruff]\nline-length = 88")
 
         ruff_config_setup()
 

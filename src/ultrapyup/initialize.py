@@ -20,9 +20,7 @@ def _migrate_requirements_to_pyproject() -> None:
         return
 
     requirements = requirements_path.read_text().strip().split("\n")
-    requirements = [
-        req.strip() for req in requirements if req.strip() and not req.startswith("#")
-    ]
+    requirements = [req.strip() for req in requirements if req.strip() and not req.startswith("#")]
 
     pyproject_content = f"""[project]
 name = "your-project-name"
@@ -30,7 +28,13 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
-{chr(10).join(f'    "{req}",' for req in requirements if not any(keyword in req.lower() for keyword in ["ruff", "ty", "lefthook"]))}
+{
+        chr(10).join(
+            f'    "{req}",'
+            for req in requirements
+            if not any(keyword in req.lower() for keyword in ["ruff", "ty", "lefthook"])
+        )
+    }
 ]
 """
 
@@ -64,6 +68,7 @@ def _check_python_project() -> bool:
 
 
 def initialize():
+    """Initialize and configure a Python project with development tools."""
     if not _check_python_project():
         return
 

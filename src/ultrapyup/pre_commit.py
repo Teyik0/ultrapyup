@@ -10,6 +10,8 @@ from ultrapyup.utils import log
 
 @dataclass
 class PreCommitTool:
+    """Represents a pre-commit tool configuration."""
+
     name: str
     value: str
     filename: str
@@ -22,9 +24,9 @@ options: list[PreCommitTool] = [
 
 
 def get_precommit_tool() -> list[PreCommitTool] | None:
+    """Get the selected pre-commit tools from user input."""
     values = inquirer.select(
-        message="Which pre-commit tool would you like to use ? "
-        "(optional - skip with ctrl+c)",
+        message="Which pre-commit tool would you like to use ? (optional - skip with ctrl+c)",
         choices=[pre_commit_tool.name for pre_commit_tool in options],
         multiselect=True,
         qmark="◆ ",
@@ -32,7 +34,7 @@ def get_precommit_tool() -> list[PreCommitTool] | None:
         pointer="◼ ",
         marker="◻ ",
         marker_pl=" ",
-        transformer=lambda result: "",
+        transformer=lambda _: "",
         keybindings={
             "skip": [{"key": "c-c"}],
         },
@@ -50,12 +52,13 @@ def get_precommit_tool() -> list[PreCommitTool] | None:
 
 
 def precommit_setup(add_cmd: str, pre_commit_tool: PreCommitTool):
+    """Set up pre-commit tool by copying configuration file and installing hooks."""
     current_file = Path(__file__)
     lefthook_source = current_file.parent / "resources" / pre_commit_tool.filename
 
     shutil.copy2(lefthook_source, Path.cwd() / pre_commit_tool.filename)
     subprocess.run(
         f"{add_cmd} {pre_commit_tool.value} install",
-        shell=True,
+        check=False,
         capture_output=True,
     )

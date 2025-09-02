@@ -1,12 +1,11 @@
-# Same as Black formatting standards
-line-length = 88
+line-length = 120
 indent-width = 4
 
 # Target Python 3.9+ for broad compatibility
 target-version = "py39"
 
 # Exclude common directories that shouldn't be linted
-exclude = [
+lint.exclude = [
     ".bzr",
     ".direnv",
     ".eggs",
@@ -35,52 +34,55 @@ exclude = [
     "venv",
 ]
 
-[lint]
-select = [
-    # pycodestyle errors and warnings
-    "E",
-    # pycodestyle warnings
-    "W",
-    # Pyflakes
-    "F",
-    # pyupgrade - modernize Python code
-    "UP",
-    # flake8-bugbear - catch likely bugs
+lint.select = [
+    "A",
+    "ARG",
     "B",
-    # flake8-simplify - suggest simpler alternatives
-    "SIM",
-    # isort - import sorting
+    "C",
+    "D",
+    "DTZ",
+    "E",
+    "EM",
+    "F",
+    "FBT",
     "I",
-    # flake8-comprehensions - better list/dict comprehensions
-    "C4",
-    # flake8-pie - misc linting rules
-    "PIE",
-    # flake8-return - improve return statements
-    "RET",
-    # Perflint - performance anti-patterns
-    "PERF",
-    # Ruff-specific rules
+    "ICN",
+    "ISC",
+    "N",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "Q",
     "RUF",
+    "S",
+    "T",
+    "TID",
+    "UP",
+    "W",
+    "YTT",
 ]
-
-ignore = [
-    # Allow line length violations (handled by formatter)
-    "E501",
-    # Allow lambda assignments (sometimes useful)
-    "E731",
-    # Allow relative imports in tests
-    "TID252",
+lint.ignore = [
+    "D100",   # Allow missing docstring in top level module
+    "D104",   # Allow missing docstring in public package
+    "D105",   # Allow missing docstring in magic method
+    "D203",   # Allow docstring directly below class definition (as enforced by D211)
+    "D213",   # Allow multi-line-summary on first line of docstring (as enforced by D212)
+    "D413",   # Allow no new line at end of docstring.
+    "EM101",  # Allow `raise ValueError(msg)`
+    "EM102",  # Allow f strings in `raise` statements
+    "FBT003", # Allow boolean positional values in function calls, like `dict.get(... True)`
+    "S603" # Subject to false positives
 ]
 
 # Allow fix for all enabled rules when --fix is provided
-fixable = ["ALL"]
-unfixable = []
+lint.fixable = ["ALL"]
+lint.unfixable = ["F401"]
 
 # Allow unused variables when underscore-prefixed
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [lint.per-file-ignores]
-# Test files can be more flexible
 "tests/**/*.py" = [
     "S101",    # Allow assert statements
     "PLR2004", # Allow magic values in tests

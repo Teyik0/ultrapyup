@@ -11,6 +11,8 @@ from ultrapyup.utils import console, file_exist, log
 
 @dataclass
 class PackageManager:
+    """Represents a package manager with its configuration details."""
+
     name: str
     add_cmd: str
     lockfile: str
@@ -23,6 +25,7 @@ options: list[PackageManager] = [
 
 
 def get_package_manager() -> PackageManager:
+    """Detect or prompt for package manager selection based on lockfiles or user input."""
     for package_manager in options:
         if file_exist(Path(package_manager.lockfile)):
             log.title("Package manager auto detected")
@@ -37,7 +40,7 @@ def get_package_manager() -> PackageManager:
         pointer="◼",
         marker="◻",
         marker_pl="  ",
-        transformer=lambda result: "",
+        transformer=lambda _: "",
     ).execute()
 
     for pm in options:
@@ -52,22 +55,18 @@ def _install_with_uv(package_manager: PackageManager, dev_deps: list[str]):
     """Install dependencies using uv package manager."""
     result = subprocess.run(
         f"{package_manager.add_cmd} {' '.join(dev_deps)} --dev",
-        shell=True,
+        check=False,
         capture_output=True,
     )
     if result.returncode != 0:
         raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
 
 
-def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
+def _install_with_pip(dev_deps: list[str]):  # noqa: PLR0912, C901
     """Install dependencies using pip package manager."""
     venv_path = Path(".venv")
     if venv_path.exists():
-        pip_cmd = (
-            ".venv/bin/pip"
-            if not Path(".venv/Scripts").exists()
-            else ".venv/Scripts/pip"
-        )
+        pip_cmd = ".venv/bin/pip" if not Path(".venv/Scripts").exists() else ".venv/Scripts/pip"
     else:
         pip_cmd = "pip"
 
@@ -85,7 +84,7 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
     for dep in dev_deps:
         result = subprocess.run(
             f"{pip_cmd} index versions {dep}",
-            shell=True,
+            check=False,
             capture_output=True,
             text=True,
         )
@@ -95,7 +94,7 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
         else:
             result = subprocess.run(
                 f"{pip_cmd} index versions {dep} --pre",
-                shell=True,
+                check=False,
                 capture_output=True,
                 text=True,
             )
@@ -115,14 +114,7 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
         existing_dev_deps = config["dependency-groups"].get("dev", [])
         existing_packages = set()
         for dep_spec in existing_dev_deps:
-            package_name = (
-                dep_spec.split("==")[0]
-                .split(">=")[0]
-                .split("<=")[0]
-                .split("~=")[0]
-                .split("!=")[0]
-                .strip()
-            )
+            package_name = dep_spec.split("==")[0].split(">=")[0].split("<=")[0].split("~=")[0].split("!=")[0].strip()
             existing_packages.add(package_name)
 
         # Only add NEW packages from dev_deps
@@ -141,27 +133,23 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
 
     result = subprocess.run(
         f"{pip_cmd} install --upgrade pip",
-        shell=True,
+        check=False,
         capture_output=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"Failed to upgrade pip: {result.stderr.decode() if result.stderr else 'Unknown error'}"
-        )
+        raise RuntimeError(f"Failed to upgrade pip: {result.stderr.decode() if result.stderr else 'Unknown error'}")
 
     result = subprocess.run(
         f"{pip_cmd} install .",
-        shell=True,
+        check=False,
         capture_output=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"Failed to install package: {result.stderr.decode() if result.stderr else 'Unknown error'}"
-        )
+        raise RuntimeError(f"Failed to install package: {result.stderr.decode() if result.stderr else 'Unknown error'}")
 
     result = subprocess.run(
         f"{pip_cmd} install --group dev",
-        shell=True,
+        check=False,
         capture_output=True,
     )
     if result.returncode != 0:
@@ -170,9 +158,8 @@ def _install_with_pip(package_manager: PackageManager, dev_deps: list[str]):
         )
 
 
-def install_dependencies(
-    package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None
-) -> None:
+def install_dependencies(package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None) -> None:
+    """Install development dependencies using the specified package manager."""
     dev_deps = ["ruff", "ty", "ultrapyup"]
     if pre_commit_tools:
         dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
@@ -181,20 +168,18 @@ def install_dependencies(
         if package_manager.name == "uv":
             _install_with_uv(package_manager, dev_deps)
         else:
-            _install_with_pip(package_manager, dev_deps)
+            _install_with_pip(dev_deps)
 
         log.title("Dependencies installed")
         log.info(
             f"ruff, ty, ultrapyup{', ' if pre_commit_tools else ''}{
-                ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools)
-                if pre_commit_tools
-                else ''
+                ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools) if pre_commit_tools else ''
             }"
         )
 
 
-def ruff_config_setup():
-    """Add Ruff configuration to pyproject.toml that extends the base configuration from local .venv ultrapyup installation."""
+def ruff_config_setup():  # noqa: C901
+    """Extends ruff base configuration from local .venv ultrapyup user installation."""
     pyproject_path = Path.cwd() / "pyproject.toml"
 
     if not pyproject_path.exists():
@@ -239,7 +224,8 @@ def ruff_config_setup():
     # If no valid site-packages found, return with clear message
     if not site_packages_path:
         log.info(
-            "No virtualenv site-packages directory found. Please ensure your virtual environment is properly initialized."
+            "No virtualenv site-packages directory found. Please ensure your "
+            "virtual environment is properly initialized."
         )
         return
 
