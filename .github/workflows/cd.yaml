@@ -37,6 +37,7 @@ jobs:
         run: uv run pytest -n auto tests --cov
 
       - name: Check if version is PATCH, FEATURE or BREAKING CHANGE
+        if: github.ref == 'refs/heads/dev'
         id: bump_type
         uses: ietf-tools/semver-action@v1
         with:
