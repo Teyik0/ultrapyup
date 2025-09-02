@@ -1,6 +1,6 @@
 [project]
 name = "ultrapyup"
-version = "0.7.0b1"
+version = "0.7.0b2"
 description = "A tool to empower your Python projects"
 authors = [{ name = "teyik0", email = "teyik0.fr@icloud.com" }]
 readme = "README.md"
