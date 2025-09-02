@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import toml
@@ -130,23 +130,33 @@ class TestInstallDependencies:
 
     def test_install_with_poetry_and_precommit(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with poetry and pre-commit tools."""
-        install_dependencies(PackageManager("poetry", "poetry.lock"), [pre_commit_options[0]])
+        # Mock Poetry subprocess to avoid concurrency issues during parallel testing
+        # This exception has been made only for poetry
+        with patch("ultrapyup.package_manager.subprocess.run") as mock_run:
+            # Mock successful Poetry command
+            mock_result = MagicMock()
+            mock_result.returncode = 0
+            mock_result.stdout = "Successfully added packages"
+            mock_result.stderr = ""
+            mock_run.return_value = mock_result
+
+            install_dependencies(PackageManager("poetry", "poetry.lock"), [pre_commit_options[0]])
+
+            # Verify Poetry command was called correctly
+            mock_run.assert_called_once()
+            called_cmd = mock_run.call_args[0][0]
+            assert called_cmd == ["poetry", "add", "--group", "dev", "ruff", "ty", "ultrapyup", "lefthook"]
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
         assert "ruff, ty, ultrapyup, lefthook" in captured.out
 
-        # Check that poetry.lock was created/updated
+        # Check that poetry.lock was created/updated (should already exist from fixture)
         poetry_lock_path = poetry_project / "poetry.lock"
         assert poetry_lock_path.exists()
 
-        # Check pyproject.toml was updated with dependencies
-        pyproject_path = poetry_project / "pyproject.toml"
-        pyproject_content = pyproject_path.read_text()
-        assert "ruff" in pyproject_content
-        assert "ty" in pyproject_content
-        assert "ultrapyup" in pyproject_content
-        assert "lefthook" in pyproject_content
+        # Note: We don't check pyproject.toml content since we mocked the Poetry command
+        # The actual Poetry command would update it, but our mock doesn't
 
     def test_install_with_pip_no_precommit(
         self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]

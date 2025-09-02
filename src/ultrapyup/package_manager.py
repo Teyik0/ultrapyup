@@ -47,7 +47,9 @@ class PackageManager:
         """Install packages using poetry."""
         cmd = ["poetry", "add", "--group", "dev", *packages]
 
-        subprocess.run(cmd, check=False, capture_output=True)
+        result = subprocess.run(cmd, check=False, capture_output=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
 
     def _add_with_pip(self, packages: list[str]) -> None:
         """Install packages using pip."""
