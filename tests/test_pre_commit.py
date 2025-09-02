@@ -2,9 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ultrapyup.pre_commit import (
-    get_precommit_tool,
-)
+from ultrapyup.pre_commit import get_precommit_tool
 
 
 class TestGetPrecommitTool:

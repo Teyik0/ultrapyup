@@ -1,12 +1,14 @@
 repos:
   - repo: local
     hooks:
+      # Pre-commit stage hooks (run on git commit)
       - id: format
         name: format
         entry: uv run ruff format .
         language: system
         files: \.py$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: lint
         name: lint
@@ -14,6 +16,7 @@ repos:
         language: system
         files: \.py$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: typecheck
         name: typecheck
@@ -21,10 +24,21 @@ repos:
         language: system
         files: \.py$
         pass_filenames: false
+        stages: [pre-commit]
 
+      # Pre-push stage hooks (run on git push)
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -n auto tests --cov
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      # Commit-msg stage hooks (run on commit message validation)
       - id: commitlint
         name: check
-        entry: uv run commitlint
+        entry: uv run commitlint --file
         language: system
         stages: [commit-msg]
-        pass_filenames: false
+        pass_filenames: true

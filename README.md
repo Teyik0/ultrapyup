@@ -10,7 +10,7 @@ Ultrapyup is a zero-config Python development framework that provides a robust d
     <img src="https://img.shields.io/github/actions/workflow/status/teyik0/ultrapyup/cd.yaml?branch=main" alt="CD Status" />
     <img src="https://img.shields.io/pypi/v/ultrapyup" alt="PyPI Version" />
     <img src="https://img.shields.io/github/license/teyik0/ultrapyup" alt="License" />
-    <img src="https://img.shields.io/badge/python-3.9%2B-blue" alt="Python Version" />
+    <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python Version" />
 </div>
 
 Heavily inspired by [Ultracite](https://github.com/haydenbleasel/ultracite), but built for the Python ecosystem.
