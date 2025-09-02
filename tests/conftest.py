@@ -1,5 +1,4 @@
 import os
-import re
 import shutil
 import subprocess
 import tempfile
@@ -7,6 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+import toml
 from rich.console import Console
 
 from ultrapyup.utils import Logger, console, log
@@ -93,18 +93,17 @@ def poetry_project(python_uv_project: Path) -> Path:
     if venv_path.exists():
         shutil.rmtree(venv_path)
 
+    # Fix pyproject.toml to be Poetry-compatible
     pyproject_path = python_uv_project / "pyproject.toml"
     if pyproject_path.exists():
-        content = pyproject_path.read_text()
-        # Change requires-python to be Poetry-compatible with specific upper bound
-        # Handle any Python version (>=3.12, >=3.14, etc.)
-        content = re.sub(r'requires-python = ">=3\.\d+"', 'requires-python = ">=3.10,<4.0"', content)
-        content = re.sub(
-            r'\[build-system\]\nrequires = \["uv_build>=.*?"\]\nbuild-backend = "uv_build"',
-            '[build-system]\nrequires = ["poetry-core"]\nbuild-backend = "poetry.core.masonry.api"',
-            content,
-        )
-        pyproject_path.write_text(content)
+        pyproject_data = toml.load(pyproject_path)
+
+        if "project" in pyproject_data and "requires-python" in pyproject_data["project"]:
+            pyproject_data["project"]["requires-python"] = ">=3.10,<4.0"
+        pyproject_data["build-system"] = {"requires": ["poetry-core"], "build-backend": "poetry.core.masonry.api"}
+
+        with open(pyproject_path, "w") as f:
+            toml.dump(pyproject_data, f)
 
     uv_lock_path = python_uv_project / "uv.lock"
     if uv_lock_path.exists():
