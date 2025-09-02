@@ -64,6 +64,8 @@ def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitT
         cmd = [shutil.which("python") or "python", "-m", *pre_commit_tool.install_command]
     elif package_manager.name == "uv":
         cmd = [shutil.which("uv") or "uv", "run", *pre_commit_tool.install_command]
+    elif package_manager.name == "poetry":
+        cmd = [shutil.which("poetry") or "poetry", "run", *pre_commit_tool.install_command]
     else:
         raise ValueError(f"Unsupported package manager for {pre_commit_tool.value} install: {package_manager.name}")
 

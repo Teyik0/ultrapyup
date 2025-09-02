@@ -86,6 +86,50 @@ ruff>=0.1.0
 
 
 @pytest.fixture
+def poetry_project(python_uv_project: Path) -> Path:
+    """Create a Python project using uv project fixture, then delete uv.lock and run poetry sync."""
+    # Step 2: Remove existing .venv to force Poetry to create its own
+    venv_path = python_uv_project / ".venv"
+    if venv_path.exists():
+        shutil.rmtree(venv_path)
+
+    # Step 3: Fix pyproject.toml to be Poetry-compatible
+    pyproject_path = python_uv_project / "pyproject.toml"
+    if pyproject_path.exists():
+        # Read current content and replace the Python requirement
+        content = pyproject_path.read_text()
+        # Change requires-python to be Poetry-compatible with specific upper bound
+        content = content.replace('requires-python = ">=3.12"', 'requires-python = ">=3.10,<4.0"')
+        # Replace uv build system with Poetry
+        content = content.replace(
+            '[build-system]\nrequires = ["uv_build>=0.8.14,<0.9.0"]\nbuild-backend = "uv_build"',
+            '[build-system]\nrequires = ["poetry-core"]\nbuild-backend = "poetry.core.masonry.api"',
+        )
+        pyproject_path.write_text(content)
+
+    # Step 4: Delete uv.lock file
+    uv_lock_path = python_uv_project / "uv.lock"
+    if uv_lock_path.exists():
+        uv_lock_path.unlink()
+
+    # Step 5: Run poetry sync with isolated environment
+    env = os.environ.copy()
+    env.pop("VIRTUAL_ENV", None)  # Remove any existing virtual env reference
+    env.pop("POETRY_ACTIVE", None)  # Remove poetry active flag
+
+    subprocess.run(
+        [shutil.which("poetry") or "poetry", "sync"],
+        cwd=python_uv_project,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+    return python_uv_project
+
+
+@pytest.fixture
 def project_with_ruff_config(project_with_pyproject: Path) -> Path:
     """Create a project with existing Ruff configuration in pyproject.toml."""
     pyproject_path = project_with_pyproject / "pyproject.toml"

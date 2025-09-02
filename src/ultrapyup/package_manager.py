@@ -30,12 +30,22 @@ class PackageManager:
             self._add_with_uv(packages)
         elif self.name == "pip":
             self._add_with_pip(packages)
+        elif self.name == "poetry":
+            self._add_with_poetry(packages)
         else:
             raise ValueError(f"Unsupported package manager: {self.name}")
 
     def _add_with_uv(self, packages: list[str]) -> None:
         """Install packages using uv."""
         cmd = ["uv", "add", *packages, "--dev"]
+
+        result = subprocess.run(cmd, check=False, capture_output=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to install dependencies: {result.stderr.decode()}")
+
+    def _add_with_poetry(self, packages: list[str]) -> None:
+        """Install packages using poetry."""
+        cmd = ["poetry", "add", "--group", "dev", *packages]
 
         result = subprocess.run(cmd, check=False, capture_output=True)
         if result.returncode != 0:
@@ -153,6 +163,7 @@ class PackageManager:
 
 options: list[PackageManager] = [
     PackageManager("uv", "uv.lock"),
+    PackageManager("poetry", "poetry.lock"),
     PackageManager("pip", None),
 ]
 
