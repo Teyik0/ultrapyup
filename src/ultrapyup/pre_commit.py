@@ -70,7 +70,7 @@ def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitT
                 check=False,
                 capture_output=True,
             )
-        elif package_manager.name == "poetry":
+        elif package_manager.name == "uv":
             subprocess.run(
                 [shutil.which("uv") or "uv", "run", "lefthook", "install"],
                 check=False,
