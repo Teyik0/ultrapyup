@@ -1,3 +1,6 @@
+"""Module for project initialization and configuration."""
+
+import sys
 from pathlib import Path
 
 from ultrapyup.editor import editor_setup, get_editors
@@ -11,6 +14,11 @@ from ultrapyup.pre_commit import get_precommit_tool, precommit_setup
 from ultrapyup.utils import file_exist, log
 
 
+def _get_python_version() -> str:
+    """Get the current Python version in format 'X.Y'."""
+    return f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
 def _migrate_requirements_to_pyproject() -> None:
     """Migrate requirements.txt to pyproject.toml if needed."""
     requirements_path = Path("requirements.txt")
@@ -22,11 +30,12 @@ def _migrate_requirements_to_pyproject() -> None:
     requirements = requirements_path.read_text().strip().split("\n")
     requirements = [req.strip() for req in requirements if req.strip() and not req.startswith("#")]
 
+    python_version = _get_python_version()
     pyproject_content = f"""[project]
 name = "your-project-name"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.12"
+requires-python = ">={python_version}"
 dependencies = [
 {
         chr(10).join(
