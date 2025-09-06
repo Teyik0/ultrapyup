@@ -27,7 +27,7 @@ class TestGetEditorsRules:
             assert len(result) == 1
             assert result[0].name == "Zed AI"
             assert result[0].value == "zed-ai"
-            assert result[0].target_file == ".zed/.rules"
+            assert result[0].target_file == ".rules"
             assert result[0].source_file == ".rules"
 
             captured = capsys.readouterr()
@@ -217,7 +217,7 @@ class TestEditorRuleSetup:
             editor_rule_setup(rule)
 
         # Verify file was created with correct content
-        target_file = temp_dir / ".zed" / ".rules"
+        target_file = temp_dir / ".rules"
         assert target_file.exists()
         assert target_file.read_text() != rules_content
         assert target_file.parent.is_dir()

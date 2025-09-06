@@ -50,7 +50,7 @@ rule_options = [
     EditorRule(
         name="Zed AI",
         value="zed-ai",
-        target_file=".zed/.rules",
+        target_file=".rules",
         source_file=".rules",
     ),
 ]
