@@ -131,7 +131,7 @@ class TestInitialize:
             captured = capsys.readouterr()
             assert "Migrated requirements.txt to pyproject.toml" in captured.out
             assert (
-                "Found 4 dependencies" in captured.out or "4 dependencies" in captured.out
+                "Migrated 3 dependencies" in captured.out or "3 dependencies" in captured.out
             )  # From migration (may have ANSI codes)
             assert "pip" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies

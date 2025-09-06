@@ -69,7 +69,7 @@ black==23.0.0"""
 
         captured = capsys.readouterr()
         assert "Migrated requirements.txt to pyproject.toml" in captured.out
-        assert "Found 3 dependencies" in captured.out
+        assert "Migrated 3 dependencies" in captured.out
 
     def test_no_migration_when_pyproject_exists(self, project_dir: Path) -> None:
         """Test that migration doesn't happen when pyproject.toml already exists."""
