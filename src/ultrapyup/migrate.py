@@ -41,7 +41,7 @@ dependencies = [
     pyproject_path.write_text(pyproject_content)
     requirements_path.unlink()
     log.title("📦 Migrated requirements.txt to pyproject.toml")
-    log.info(f"Found {len(requirements)} dependencies")
+    log.info(f"Migrated {len(filtered_requirements)} dependencies")
     log.info("Please update project name and version in pyproject.toml")
 
 
