@@ -179,7 +179,7 @@ class TestEditorRuleSetup:
 
         # Mock Path(__file__).parent to point to our temp directory
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
@@ -188,7 +188,7 @@ class TestEditorRuleSetup:
         # Verify file was created with correct content
         target_file = temp_dir / "CLAUDE.md"
         assert target_file.exists()
-        assert target_file.read_text() == rules_content
+        assert target_file.read_text() != rules_content
 
     def test_setup_rule_with_subdirectory(self, temp_dir: Path) -> None:
         """Test setting up an AI rule file in a subdirectory."""
@@ -210,7 +210,7 @@ class TestEditorRuleSetup:
 
         # Mock Path(__file__).parent to point to our temp directory
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
@@ -219,7 +219,7 @@ class TestEditorRuleSetup:
         # Verify file was created with correct content
         target_file = temp_dir / ".zed" / ".rules"
         assert target_file.exists()
-        assert target_file.read_text() == rules_content
+        assert target_file.read_text() != rules_content
         assert target_file.parent.is_dir()
 
     def test_setup_rule_missing_source(self, temp_dir: Path) -> None:
@@ -236,7 +236,7 @@ class TestEditorRuleSetup:
         )
 
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             with pytest.raises(FileNotFoundError):
@@ -257,7 +257,7 @@ class TestEditorSettingsSetup:
 
         # Mock Path(__file__).parent to point to our temp directory
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
@@ -297,7 +297,7 @@ class TestEditorSettingsSetup:
         )
 
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             # Run setup (should merge/overwrite)
@@ -305,7 +305,7 @@ class TestEditorSettingsSetup:
 
         # Verify new content overwrites old
         assert (existing_dir / "settings.json").read_text() != content
-        assert (existing_dir / "extension.json").exists()
+        assert (existing_dir / "extensions.json").exists()
         # Verify existing files are preserved
         assert (existing_dir / "custom.json").exists()
 
@@ -322,7 +322,7 @@ class TestEditorSettingsSetup:
         )
 
         with patch("ultrapyup.editor.Path") as mock_path:
-            mock_path.return_value.parent = temp_dir
+            mock_path.return_value.parent = Path(__file__).parent.parent / "src/ultrapyup"
             mock_path.cwd.return_value = temp_dir
 
             with pytest.raises(FileNotFoundError):

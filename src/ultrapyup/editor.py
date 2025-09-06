@@ -188,7 +188,4 @@ def editor_settings_setup(setting: EditorSetting) -> None:
     source_dir = current_file.parent / "resources" / setting.settings_dir
     target_dir = Path.cwd() / setting.settings_dir
 
-    if source_dir.is_dir():
-        shutil.copytree(source_dir, target_dir, dirs_exist_ok=True)
-    else:
-        raise FileNotFoundError(f"Source directory {source_dir} not found")
+    shutil.copytree(source_dir, target_dir, dirs_exist_ok=True)
