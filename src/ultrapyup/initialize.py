@@ -1,4 +1,9 @@
-from ultrapyup.editor import editor_setup, get_editors
+from ultrapyup.editor import (
+    editor_rule_setup,
+    editor_settings_setup,
+    get_editors_rules,
+    get_editors_settings,
+)
 from ultrapyup.migrate import _check_python_project, _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import (
     get_package_manager,
@@ -20,7 +25,8 @@ def initialize() -> None:
 
     # Ask user's preferences
     package_manager = get_package_manager()
-    editors = get_editors()
+    editor_rules = get_editors_rules()
+    editor_settings = get_editors_settings()
     pre_commit_tools = get_precommit_tool()
 
     # Configure user's experience
@@ -34,13 +40,16 @@ def initialize() -> None:
         log.title("Pre-commit setup completed")
         log.info(f"{', '.join(tool.filename for tool in pre_commit_tools)} created")
 
-    if editors:
-        for editor in editors:
-            editor_setup(editor)
-        log.title("Editor setup completed")
-        log.info(
-            f"{', '.join(editor.file for editor in editors)}, "
-            f"{', '.join(editor.rule_file for editor in editors)} created"
-        )
+    if editor_rules:
+        for rule in editor_rules:
+            editor_rule_setup(rule)
+        log.title("AI rules setup completed")
+        log.info(f"{', '.join(rule.target_file for rule in editor_rules)} created")
+
+    if editor_settings:
+        for setting in editor_settings:
+            editor_settings_setup(setting)
+        log.title("Editor settings setup completed")
+        log.info(f"{', '.join(setting.settings_dir for setting in editor_settings)} created")
 
     return

@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "astral-sh.ty",
+    "ms-python.debugpy",
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "tamasfe.even-better-toml",
+    "redhat.vscode-yaml"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.flake8",
+    "ms-python.pylint",
+    "ms-python.black-formatter",
+    "ms-python.autopep8",
+    "ms-python.pylance",
+    "ms-python.mypy-type-checker"
+  ]
+}

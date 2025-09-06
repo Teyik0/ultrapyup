@@ -1,7 +1,6 @@
 repos:
   - repo: local
     hooks:
-      # Pre-commit stage hooks (run on git commit)
       - id: format
         name: format
         entry: uv run ruff format .
@@ -26,19 +25,22 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
-      # Pre-push stage hooks (run on git push)
-      - id: pytest
-        name: pytest
-        entry: uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
-        language: system
-        pass_filenames: false
-        always_run: true
-        stages: [pre-push]
+      # This need pytest, pytest-cov and pytest-xdist, install them and uncomment
+      # uv add pytest pytest-cov pytest-xdist
+      # - id: pytest
+      #   name: pytest
+      #   entry: uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
+      #   language: system
+      #   pass_filenames: false
+      #   always_run: true
+      #   stages: [pre-push]
 
+      # This need commitlint, install it and uncomment
+      # uv add commitlint
       # Commit-msg stage hooks (run on commit message validation)
-      - id: commitlint
-        name: check
-        entry: uv run commitlint --file
-        language: system
-        stages: [commit-msg]
-        pass_filenames: true
+      # - id: commitlint
+      #   name: check
+      #   entry: uv run commitlint --file
+      #   language: system
+      #   stages: [commit-msg]
+      #   pass_filenames: true
