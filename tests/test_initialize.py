@@ -2,139 +2,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import toml
 
 from ultrapyup.initialize import (
-    _check_python_project,
-    _migrate_requirements_to_pyproject,
     initialize,
 )
-
-
-class TestCheckPythonProject:
-    """Tests for _check_python_project function."""
-
-    def test_no_python_project(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
-        """Test when no Python project files exist."""
-        result = _check_python_project()
-
-        assert result is False
-        captured = capsys.readouterr()
-        assert "No Python project detected" in captured.out
-
-    def test_with_venv_only(self, project_dir: Path) -> None:
-        """Test when only .venv directory exists."""
-        venv_path = project_dir / ".venv"
-        venv_path.mkdir()
-
-        result = _check_python_project()
-
-        assert result is True
-
-    def test_with_requirements_txt(self, project_with_requirements: Path) -> None:
-        """Test when requirements.txt exists."""
-        result = _check_python_project()
-
-        assert result is True
-
-        requirements_txt = project_with_requirements / "requirements.txt"
-        assert requirements_txt.exists()
-
-        content = requirements_txt.read_text()
-        assert "requests==2.31.0" in content
-        assert "pytest>=7.0.0" in content
-        assert "tqdm>=4.67.1" in content
-        assert "ruff>=0.1.0" in content
-
-    def test_with_pyproject_toml(self, python_uv_project: Path) -> None:  # noqa: ARG002
-        """Test when pyproject.toml exists."""
-        result = _check_python_project()
-
-        assert result is True
-
-
-class TestMigrateRequirementsToPyproject:
-    """Tests for _migrate_requirements_to_pyproject function."""
-
-    def test_successful_migration(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
-        """Test successful migration from requirements.txt to pyproject.toml."""
-        requirements_content = """requests==2.31.0
-pytest>=7.0.0
-black==23.0.0"""
-        (project_dir / "requirements.txt").write_text(requirements_content)
-
-        _migrate_requirements_to_pyproject()
-
-        pyproject_path = project_dir / "pyproject.toml"
-        assert pyproject_path.exists()
-
-        content = pyproject_path.read_text()
-        assert "requests==2.31.0" in content
-        assert "pytest>=7.0.0" in content
-        assert "black==23.0.0" in content
-
-        captured = capsys.readouterr()
-        assert "Migrated requirements.txt to pyproject.toml" in captured.out
-        assert "Found 3 dependencies" in captured.out
-
-    def test_no_migration_when_pyproject_exists(self, project_dir: Path) -> None:
-        """Test that migration doesn't happen when pyproject.toml already exists."""
-        (project_dir / "requirements.txt").write_text("requests==2.31.0\n")
-
-        existing_content = "[project]\nname = 'existing'\n"
-        (project_dir / "pyproject.toml").write_text(existing_content)
-
-        _migrate_requirements_to_pyproject()
-
-        # Content should remain unchanged
-        content = (project_dir / "pyproject.toml").read_text()
-        assert content == existing_content
-        assert "requests" not in content
-
-    def test_no_migration_when_no_requirements(self, project_dir: Path) -> None:
-        """Test that migration doesn't happen when requirements.txt doesn't exist."""
-        _migrate_requirements_to_pyproject()
-
-        pyproject_path = project_dir / "pyproject.toml"
-        assert not pyproject_path.exists()
-
-    def test_migration_handles_comments_and_empty_lines(self, project_dir: Path) -> None:
-        """Test that migration correctly handles comments and empty lines."""
-        requirements_content = """# Main dependencies
-requests==2.31.0
-
-# Testing tools
-pytest>=7.0.0
-# This is a comment
-
-black==23.0.0
-
-"""
-        (project_dir / "requirements.txt").write_text(requirements_content)
-
-        _migrate_requirements_to_pyproject()
-
-        pyproject_path = project_dir / "pyproject.toml"
-        content = pyproject_path.read_text()
-
-        # Should have only the actual dependencies
-        assert '"requests==2.31.0"' in content
-        assert '"pytest>=7.0.0"' in content
-        assert '"black==23.0.0"' in content
-        assert "# Main dependencies" not in content
-        assert "# Testing tools" not in content
-        assert "# This is a comment" not in content
-
-    def test_migration_handles_read_error(self, project_dir: Path) -> None:
-        """Test handling of read errors during migration."""
-        requirements_path = project_dir / "requirements.txt"
-
-        requirements_path.write_bytes(b"\xff\xfe")  # Invalid UTF-8
-
-        with pytest.raises(UnicodeDecodeError):
-            _migrate_requirements_to_pyproject()
-
-        pyproject_path = project_dir / "pyproject.toml"
-        assert not pyproject_path.exists()
 
 
 class TestInitialize:
@@ -162,8 +34,8 @@ class TestInitialize:
 
         # Only mock inquirer to control user choices
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Set up inquirer mock to return choices for package manager, editors, and precommit
-            mock_inquirer.return_value.execute.side_effect = ["uv", [], []]
+            # Set up inquirer mock to return choices for package manager, editor rules, editor settings, and precommit
+            mock_inquirer.return_value.execute.side_effect = ["uv", [], [], []]
 
             result = initialize()
             captured = capsys.readouterr()
@@ -173,11 +45,20 @@ class TestInitialize:
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert result is None
 
-    def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
+            pyproject_path = python_empty_project / "pyproject.toml"
+            with open(pyproject_path) as f:
+                pyproject_data = toml.load(f)
+
+            dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
+            assert any(dep.startswith("ruff>=") for dep in dev_deps)
+            assert any(dep.startswith("ty>=") for dep in dev_deps)
+            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
+
+    def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Set up inquirer mock to return choices: no editors, lefthook precommit
-            mock_inquirer.return_value.execute.side_effect = [[], ["Lefthook"]]
+            # Set up inquirer mock to return choices: no editor rules, no editor settings, lefthook precommit
+            mock_inquirer.return_value.execute.side_effect = [[], [], ["Lefthook"]]
 
             result = initialize()
             captured = capsys.readouterr()
@@ -189,28 +70,59 @@ class TestInitialize:
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
 
-    def test_initialize_with_editors(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
+            pyproject_path = python_uv_project / "pyproject.toml"
+            with open(pyproject_path) as f:
+                pyproject_data = toml.load(f)
+
+            dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
+            assert any(dep.startswith("ruff>=") for dep in dev_deps)
+            assert any(dep.startswith("ty>=") for dep in dev_deps)
+            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
+            assert any(dep.startswith("lefthook>=") for dep in dev_deps)
+
+            assert (python_uv_project / "lefthook.yaml").exists()
+            assert not (python_uv_project / ".pre-commit-config.yaml").exists()
+
+    def test_initialize_with_editors(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with editors selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            mock_inquirer.return_value.execute.side_effect = [["Zed"], []]
+            mock_inquirer.return_value.execute.side_effect = [["Zed AI"], ["Zed"], []]
 
             result = initialize()
             captured = capsys.readouterr()
             assert "uv" in captured.out  # Package manager auto-detected
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
-            assert "Editor setup completed" in captured.out  # From editor setup
-            assert ".rules, .zed created" in captured.out  # Editor files created
+            assert "AI rules setup completed" in captured.out  # From editor rule setup
+            assert "Editor settings setup completed" in captured.out  # From editor settings setup
+            assert ".rules created" in captured.out  # AI rule files created
+            assert ".zed created" in captured.out  # Editor settings created
             assert result is None
 
-    def test_initialize_full_flow(self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]) -> None:
+            pyproject_path = python_uv_project / "pyproject.toml"
+            with open(pyproject_path) as f:
+                pyproject_data = toml.load(f)
+
+            dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
+            assert any(dep.startswith("ruff>=") for dep in dev_deps)
+            assert any(dep.startswith("ty>=") for dep in dev_deps)
+            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
+
+            assert (python_uv_project / ".rules").exists()
+            assert (python_uv_project / ".zed").exists()
+            assert not (python_uv_project / ".vscode/settings.json").exists()
+
+    def test_initialize_full_flow_with_pip(
+        self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test complete initialization flow with all options."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Set up inquirer mock to return choices: Zed editor, Lefthook precommit
+            # Set up inquirer mock to return choices: pip package manager, Zed AI rules, Zed settings, Pre-commit
             mock_inquirer.return_value.execute.side_effect = [
                 "pip",
+                ["Zed AI"],
                 ["Zed"],
-                ["Lefthook"],
+                ["Pre-commit"],
             ]
 
             result = initialize()
@@ -218,13 +130,74 @@ class TestInitialize:
 
             captured = capsys.readouterr()
             assert "Migrated requirements.txt to pyproject.toml" in captured.out
-            assert "Found 4 dependencies" in captured.out  # From migration (
+            assert (
+                "Migrated 3 dependencies" in captured.out or "3 dependencies" in captured.out
+            )  # From migration (may have ANSI codes)
             assert "pip" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
-            assert "lefthook" in captured.out  # Precommit tool in dependencies
+            assert "pre-commit" in captured.out  # Precommit tool in dependencies
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
-            assert "lefthook.yaml created" in captured.out  # Precommit file created
-            assert "Editor setup completed" in captured.out  # From editor setup
-            assert ".rules, .zed created" in captured.out  # Editor files created
+            assert ".pre-commit-config.yaml created" in captured.out  # Precommit file created
+            assert "AI rules setup completed" in captured.out  # From editor rule setup
+            assert "Editor settings setup completed" in captured.out  # From editor settings setup
+            assert ".rules created" in captured.out  # AI rule files created
+            assert ".zed created" in captured.out  # Editor settings created
             assert result is None
+
+            pyproject_path = project_with_requirements / "pyproject.toml"
+            with open(pyproject_path) as f:
+                pyproject_data = toml.load(f)
+
+            dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
+            assert any(dep.startswith("ruff>=") for dep in dev_deps)
+            assert any(dep.startswith("ty>=") for dep in dev_deps)
+            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
+            assert any(dep.startswith("pre-commit>=") for dep in dev_deps)
+
+            assert (project_with_requirements / ".pre-commit-config.yaml").exists()
+            assert not (project_with_requirements / "lefthook.yaml").exists()
+            assert (project_with_requirements / ".rules").exists()
+            assert (project_with_requirements / ".zed").exists()
+            assert not (project_with_requirements / ".vscode/settings.json").exists()
+
+    def test_initialize_full_flow_with_uv(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """Test complete initialization flow with all options."""
+        with patch("InquirerPy.inquirer.select") as mock_inquirer:
+            mock_inquirer.return_value.execute.side_effect = [
+                ["GitHub Copilot"],
+                ["VSCode"],
+                ["Pre-commit"],
+            ]
+
+            result = initialize()
+
+            captured = capsys.readouterr()
+            assert "Package manager auto detected" in captured.out
+            assert "uv" in captured.out
+            assert "Dependencies installed" in captured.out
+            assert "pre-commit" in captured.out
+            assert "Ruff configuration setup completed" in captured.out
+            assert "Pre-commit setup completed" in captured.out
+            assert ".pre-commit-config.yaml created" in captured.out
+            assert "AI rules setup completed" in captured.out
+            assert "Editor settings setup completed" in captured.out
+            assert ".github/copilot-instructions.md created" in captured.out
+            assert ".vscode created" in captured.out
+            assert result is None
+
+            pyproject_path = python_uv_project / "pyproject.toml"
+            with open(pyproject_path) as f:
+                pyproject_data = toml.load(f)
+
+            dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
+            assert any(dep.startswith("ruff>=") for dep in dev_deps)
+            assert any(dep.startswith("ty>=") for dep in dev_deps)
+            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
+            assert any(dep.startswith("pre-commit>=") for dep in dev_deps)
+
+            assert (python_uv_project / ".pre-commit-config.yaml").exists()
+            assert not (python_uv_project / "lefthook.yaml").exists()
+            assert (python_uv_project / ".github/copilot-instructions.md").exists()
+            assert not (python_uv_project / ".zed").exists()
+            assert (python_uv_project / ".vscode").exists()

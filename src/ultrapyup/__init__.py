@@ -3,6 +3,7 @@ from typing import Annotated
 import typer
 
 from ultrapyup.initialize import initialize
+from ultrapyup.utils import log
 
 
 app = typer.Typer(
@@ -15,7 +16,10 @@ app = typer.Typer(
 @app.command("init", help="Initialize Ultrapyup in the current directory")
 def init_command() -> None:
     """Initialize Ultrapyup in the current directory."""
-    initialize()
+    try:
+        initialize()
+    except Exception as e:
+        log.error(f"Initialization failed: {e}")
 
 
 @app.command("lint", help="Run Ruff linter without fixing files")

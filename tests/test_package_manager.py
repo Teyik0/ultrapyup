@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import toml
@@ -40,6 +40,18 @@ class TestGetPackageManager:
             assert result.name == "uv"
             assert result.lockfile == "uv.lock"
 
+    def test_auto_detect_poetry_lock(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
+        """Test auto-detection when poetry.lock exists."""
+        result = get_package_manager()
+
+        assert isinstance(result, PackageManager)
+        assert result.name == "poetry"
+        assert result.lockfile == "poetry.lock"
+
+        captured = capsys.readouterr()
+        assert "Package manager auto detected" in captured.out
+        assert "poetry" in captured.out
+
     def test_manual_selection_pip(self, project_with_requirements: Path) -> None:  # noqa
         """Test manual selection of pip."""
         with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
@@ -48,6 +60,15 @@ class TestGetPackageManager:
 
             assert result.name == "pip"
             assert result.lockfile is None
+
+    def test_manual_selection_poetry(self, project_dir: Path) -> None:  # noqa
+        """Test manual selection of poetry."""
+        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
+            mock_inquirer.return_value.execute.return_value = "poetry"
+            result = get_package_manager()
+
+            assert result.name == "poetry"
+            assert result.lockfile == "poetry.lock"
 
     def test_invalid_selection_raises_error(self, project_dir: Path) -> None:  # noqa
         """Test that invalid selection raises ValueError."""
@@ -88,12 +109,61 @@ class TestInstallDependencies:
         assert "ty" in pyproject
         assert "lefthook" in pyproject
 
+    def test_install_with_poetry_no_precommit(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """Test installing dependencies with poetry and no pre-commit tools."""
+        install_dependencies(PackageManager("poetry", "poetry.lock"), None)
+
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapyup" in captured.out
+
+        # Check that poetry.lock was created/updated
+        poetry_lock_path = poetry_project / "poetry.lock"
+        assert poetry_lock_path.exists()
+
+        # Check pyproject.toml was updated with dependencies
+        pyproject_path = poetry_project / "pyproject.toml"
+        pyproject_content = pyproject_path.read_text()
+        assert "ruff" in pyproject_content
+        assert "ty" in pyproject_content
+        assert "ultrapyup" in pyproject_content
+
+    def test_install_with_poetry_and_precommit(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """Test installing dependencies with poetry and pre-commit tools."""
+        # Mock Poetry subprocess to avoid concurrency issues during parallel testing
+        # This exception has been made only for poetry
+        with patch("ultrapyup.package_manager.subprocess.run") as mock_run:
+            # Mock successful Poetry command
+            mock_result = MagicMock()
+            mock_result.returncode = 0
+            mock_result.stdout = "Successfully added packages"
+            mock_result.stderr = ""
+            mock_run.return_value = mock_result
+
+            install_dependencies(PackageManager("poetry", "poetry.lock"), [pre_commit_options[0]])
+
+            # Verify Poetry command was called correctly
+            mock_run.assert_called_once()
+            called_cmd = mock_run.call_args[0][0]
+            assert called_cmd == ["poetry", "add", "--group", "dev", "ruff", "ty", "ultrapyup", "lefthook"]
+
+        captured = capsys.readouterr()
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapyup, lefthook" in captured.out
+
+        # Check that poetry.lock was created/updated (should already exist from fixture)
+        poetry_lock_path = poetry_project / "poetry.lock"
+        assert poetry_lock_path.exists()
+
+        # Note: We don't check pyproject.toml content since we mocked the Poetry command
+        # The actual Poetry command would update it, but our mock doesn't
+
     def test_install_with_pip_no_precommit(
         self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test installing dependencies with pip and no pre-commit tools."""
         _migrate_requirements_to_pyproject()
-        install_dependencies(options[1], None)
+        install_dependencies(options[2], None)
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -117,7 +187,7 @@ class TestInstallDependencies:
     ) -> None:
         """Test installing dependencies with pip and pre-commit tools."""
         _migrate_requirements_to_pyproject()
-        install_dependencies(options[1], [pre_commit_options[0]])
+        install_dependencies(options[2], [pre_commit_options[0]])
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out

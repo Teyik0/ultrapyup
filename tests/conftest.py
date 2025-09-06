@@ -6,6 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+import toml
 from rich.console import Console
 
 from ultrapyup.utils import Logger, console, log
@@ -83,6 +84,45 @@ ruff>=0.1.0
     (python_empty_project / "requirements.txt").write_text(requirements_content)
 
     return python_empty_project
+
+
+@pytest.fixture
+def poetry_project(python_uv_project: Path) -> Path:
+    """Create a Python project using uv project fixture, then delete uv.lock and run poetry sync."""
+    venv_path = python_uv_project / ".venv"
+    if venv_path.exists():
+        shutil.rmtree(venv_path)
+
+    # Fix pyproject.toml to be Poetry-compatible
+    pyproject_path = python_uv_project / "pyproject.toml"
+    if pyproject_path.exists():
+        pyproject_data = toml.load(pyproject_path)
+
+        if "project" in pyproject_data and "requires-python" in pyproject_data["project"]:
+            pyproject_data["project"]["requires-python"] = ">=3.10,<4.0"
+        pyproject_data["build-system"] = {"requires": ["poetry-core"], "build-backend": "poetry.core.masonry.api"}
+
+        with open(pyproject_path, "w") as f:
+            toml.dump(pyproject_data, f)
+
+    uv_lock_path = python_uv_project / "uv.lock"
+    if uv_lock_path.exists():
+        uv_lock_path.unlink()
+
+    env = os.environ.copy()
+    env.pop("VIRTUAL_ENV", None)  # Remove any existing virtual env reference
+    env.pop("POETRY_ACTIVE", None)  # Remove poetry active flag
+
+    subprocess.run(
+        [shutil.which("poetry") or "poetry", "sync"],
+        cwd=python_uv_project,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+    return python_uv_project
 
 
 @pytest.fixture

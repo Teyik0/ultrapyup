@@ -16,11 +16,12 @@ class PreCommitTool:
     name: str
     value: str
     filename: str
+    install_command: list[str]
 
 
 options: list[PreCommitTool] = [
-    PreCommitTool("Lefthook", "lefthook", "lefthook.yaml"),
-    PreCommitTool("Pre-commit", "pre-commit", ".pre-commit-config.yaml"),
+    PreCommitTool("Lefthook", "lefthook", "lefthook.yaml", ["lefthook", "install"]),
+    PreCommitTool("Pre-commit", "pre-commit", ".pre-commit-config.yaml", ["pre-commit", "install"]),
 ]
 
 
@@ -55,26 +56,17 @@ def get_precommit_tool() -> list[PreCommitTool] | None:
 def precommit_setup(package_manager: PackageManager, pre_commit_tool: PreCommitTool) -> None:
     """Set up pre-commit tool by copying configuration file and installing hooks."""
     current_file = Path(__file__)
-    lefthook_source = current_file.parent / "resources" / pre_commit_tool.filename
-
-    shutil.copy2(lefthook_source, Path.cwd() / pre_commit_tool.filename)
-
-    # Install the pre-commit tool if it's not already installed
+    config_source = current_file.parent / "resources" / pre_commit_tool.filename
+    shutil.copy2(config_source, Path.cwd() / pre_commit_tool.filename)
     package_manager.add([pre_commit_tool.value])
 
-    # Install hooks for tools like lefthook
-    if pre_commit_tool.value == "lefthook":
-        if package_manager.name == "pip":
-            subprocess.run(
-                [shutil.which("python") or "python", "-m", "lefthook", "install"],
-                check=False,
-                capture_output=True,
-            )
-        elif package_manager.name == "uv":
-            subprocess.run(
-                [shutil.which("uv") or "uv", "run", "lefthook", "install"],
-                check=False,
-                capture_output=True,
-            )
-        else:
-            raise ValueError(f"Unsupported package manager for lefthook install: {package_manager.name}")
+    if package_manager.name == "pip":
+        cmd = [shutil.which("python") or "python", "-m", *pre_commit_tool.install_command]
+    elif package_manager.name == "uv":
+        cmd = [shutil.which("uv") or "uv", "run", *pre_commit_tool.install_command]
+    elif package_manager.name == "poetry":
+        cmd = [shutil.which("poetry") or "poetry", "run", *pre_commit_tool.install_command]
+    else:
+        raise ValueError(f"Unsupported package manager for {pre_commit_tool.value} install: {package_manager.name}")
+
+    subprocess.run(cmd, check=False, capture_output=True, text=True)
