@@ -95,7 +95,7 @@ class TestInitialize:
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "AI rules setup completed" in captured.out  # From editor rule setup
             assert "Editor settings setup completed" in captured.out  # From editor settings setup
-            assert ".zed/.rules created" in captured.out  # AI rule files created
+            assert ".rules created" in captured.out  # AI rule files created
             assert ".zed created" in captured.out  # Editor settings created
             assert result is None
 
@@ -108,7 +108,7 @@ class TestInitialize:
             assert any(dep.startswith("ty>=") for dep in dev_deps)
             assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
 
-            assert (python_uv_project / ".zed/.rules").exists()
+            assert (python_uv_project / ".rules").exists()
             assert (python_uv_project / ".zed").exists()
             assert not (python_uv_project / ".vscode/settings.json").exists()
 
@@ -141,7 +141,7 @@ class TestInitialize:
             assert ".pre-commit-config.yaml created" in captured.out  # Precommit file created
             assert "AI rules setup completed" in captured.out  # From editor rule setup
             assert "Editor settings setup completed" in captured.out  # From editor settings setup
-            assert ".zed/.rules created" in captured.out  # AI rule files created
+            assert ".rules created" in captured.out  # AI rule files created
             assert ".zed created" in captured.out  # Editor settings created
             assert result is None
 
@@ -157,7 +157,7 @@ class TestInitialize:
 
             assert (project_with_requirements / ".pre-commit-config.yaml").exists()
             assert not (project_with_requirements / "lefthook.yaml").exists()
-            assert (project_with_requirements / ".zed/.rules").exists()
+            assert (project_with_requirements / ".rules").exists()
             assert (project_with_requirements / ".zed").exists()
             assert not (project_with_requirements / ".vscode/settings.json").exists()
 
