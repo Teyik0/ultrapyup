@@ -435,7 +435,7 @@ wheels = [
 
 [[package]]
 name = "ultrapyup"
-version = "0.7.0b4"
+version = "0.7.0b5"
 source = { editable = "." }
 dependencies = [
     { name = "inquirerpy" },
