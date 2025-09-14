@@ -7,7 +7,7 @@ from ultrapyup.editor import (
 from ultrapyup.migrate import _check_python_project, _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import PackageManager, get_package_manager
 from ultrapyup.pm import install_dependencies, ruff_config_setup, ty_config_setup
-from ultrapyup.pre_commit import get_precommit_tool, precommit_setup
+from ultrapyup.precommit import PreCommitTool, get_precommit_tools
 from ultrapyup.utils import log
 
 
@@ -15,7 +15,7 @@ def initialize(
     package_manager: PackageManager | None = None,
     editor_rules: list[EditorRule] | None = None,
     editor_settings: list[EditorSetting] | None = None,
-    precommit_tools: list[str] | None = None,
+    precommit_tools: list[PreCommitTool] | None = None,
 ) -> None:
     """Initialize and configure a Python project with development tools.
 
@@ -33,7 +33,7 @@ def initialize(
     selected_package_manager = get_package_manager(package_manager)
     selected_editor_rules = get_editors_rules(editor_rules)
     selected_editor_settings = get_editors_settings(editor_settings)
-    selected_pre_commit_tools = get_precommit_tool(precommit_tools)
+    selected_pre_commit_tools = get_precommit_tools(precommit_tools)
 
     # Configure user's experience
     install_dependencies(selected_package_manager, selected_pre_commit_tools)
@@ -42,7 +42,7 @@ def initialize(
 
     if selected_pre_commit_tools:
         for tool in selected_pre_commit_tools:
-            precommit_setup(selected_package_manager, tool)
+            tool.setup(selected_package_manager)
         log.title("Pre-commit setup completed")
         log.info(f"{', '.join(tool.filename for tool in selected_pre_commit_tools)} created")
 

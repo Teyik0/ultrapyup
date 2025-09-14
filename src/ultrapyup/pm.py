@@ -3,7 +3,7 @@ from pathlib import Path
 import toml
 
 from ultrapyup.package_manager import PackageManager
-from ultrapyup.pre_commit import PreCommitTool
+from ultrapyup.precommit import PreCommitTool
 from ultrapyup.utils import console, log
 
 

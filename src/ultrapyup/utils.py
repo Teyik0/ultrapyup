@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from InquirerPy import inquirer
 from rich.console import Console
 
 
@@ -30,3 +31,23 @@ def file_exist(path: Path | str) -> bool:
     if isinstance(path, str):
         path = Path(path)
     return path.exists()
+
+
+def ask(msg: str, choices: list[str], multiselect: bool) -> list[str]:  # noqa: FBT001
+    """Prompt the user to select multiple options from a list."""
+    values = inquirer.select(
+        message=msg,
+        choices=choices,
+        multiselect=multiselect,
+        qmark="◆ ",
+        amark="◇ ",
+        pointer="◼ ",
+        marker="◻ ",
+        marker_pl=" ",
+        transformer=lambda _: "",
+        keybindings={
+            "skip": [{"key": "c-c"}],
+        },
+        mandatory=False,
+    ).execute()
+    return values

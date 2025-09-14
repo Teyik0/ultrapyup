@@ -1,7 +1,6 @@
-from InquirerPy import inquirer
-
 from ultrapyup.editor.rule import EditorRule
 from ultrapyup.editor.setting import EditorSetting
+from ultrapyup.utils import ask
 
 
 rule_options: list[EditorRule] = list(EditorRule)
@@ -9,21 +8,11 @@ setting_options: list[EditorSetting] = list(EditorSetting)
 
 
 def _editor_rules_ask() -> list[EditorRule] | None:
-    selected_rules = inquirer.select(
-        message="Which AI rules do you want to enable? (optional - skip with ctrl+c)",
-        choices=[rule.display_name for rule in rule_options],
+    selected_rules = ask(
+        msg="Which AI rules do you want to enable? (optional - skip with ctrl+c)",
+        choices=[rule.value for rule in rule_options],
         multiselect=True,
-        qmark="◆ ",
-        amark="◇ ",
-        pointer="◼ ",
-        marker="◻ ",
-        marker_pl=" ",
-        transformer=lambda _: "",
-        keybindings={
-            "skip": [{"key": "c-c"}],
-        },
-        mandatory=False,
-    ).execute()
+    )
 
     if not selected_rules:
         return None
@@ -33,21 +22,11 @@ def _editor_rules_ask() -> list[EditorRule] | None:
 
 
 def _editor_settings_ask() -> list[EditorSetting] | None:
-    values = inquirer.select(
-        message=("Which editor settings do you want to configure? (optional - skip with ctrl+c)"),
-        choices=[setting.display_name for setting in setting_options],
+    values = ask(
+        msg="Which editor settings do you want to configure? (optional - skip with ctrl+c)",
+        choices=[settings.value for settings in setting_options],
         multiselect=True,
-        qmark="◆ ",
-        amark="◇ ",
-        pointer="◼ ",
-        marker="◻ ",
-        marker_pl=" ",
-        transformer=lambda _: "",
-        keybindings={
-            "skip": [{"key": "c-c"}],
-        },
-        mandatory=False,
-    ).execute()
+    )
 
     if not values:
         return None

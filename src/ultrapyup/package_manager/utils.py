@@ -1,25 +1,18 @@
 from pathlib import Path
 
-from InquirerPy import inquirer
-
 from ultrapyup.package_manager.pm import PackageManager
-from ultrapyup.utils import file_exist
+from ultrapyup.utils import ask, file_exist
 
 
 options: list[PackageManager] = list(PackageManager)
 
 
 def _package_manager_ask() -> PackageManager:
-    selected_package_manager = inquirer.select(
-        message="Which package manager do you use?",
+    selected_package_manager = ask(
+        msg="Which package manager do you use?",
         choices=[package_manager.value for package_manager in options],
-        qmark="◆ ",
-        amark="◇ ",
-        pointer="◼",
-        marker="◻",
-        marker_pl="  ",
-        transformer=lambda _: "",
-    ).execute()
+        multiselect=False,
+    )
 
     for pm in options:
         if pm.value == selected_package_manager:

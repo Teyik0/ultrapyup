@@ -5,7 +5,7 @@ import typer
 from ultrapyup.editor import EditorRule, EditorSetting
 from ultrapyup.initialize import initialize
 from ultrapyup.package_manager.pm import PackageManager
-from ultrapyup.types import PreCommitToolType
+from ultrapyup.precommit import PreCommitTool
 from ultrapyup.utils import log
 
 
@@ -43,7 +43,7 @@ def init_command(
         ),
     ] = None,
     precommit_tools: Annotated[
-        list[PreCommitToolType] | None,
+        list[PreCommitTool] | None,
         typer.Option(
             "--precommit-tools",
             "-pc",
@@ -56,8 +56,8 @@ def init_command(
         initialize(
             package_manager=package_manager,
             editor_rules=editor_rules,
-            editor_settings=[setting.value for setting in editor_settings] if editor_settings else None,
-            precommit_tools=[tool.value for tool in precommit_tools] if precommit_tools else None,
+            editor_settings=editor_settings,
+            precommit_tools=precommit_tools,
         )
     except Exception as e:
         log.error(f"Initialization failed: {e}")
