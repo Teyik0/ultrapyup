@@ -466,7 +466,7 @@ dev = [
     { name = "commitlint", specifier = ">=1.3.0" },
     { name = "lefthook", specifier = ">=1.12.2" },
     { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = ">=0.12.11" },
     { name = "ty", specifier = ">=0.0.1a19" },

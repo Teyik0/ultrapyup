@@ -10,7 +10,7 @@ setting_options: list[EditorSetting] = list(EditorSetting)
 def _editor_rules_ask() -> list[EditorRule] | None:
     selected_rules = ask(
         msg="Which AI rules do you want to enable? (optional - skip with ctrl+c)",
-        choices=[rule.value for rule in rule_options],
+        choices=[rule.display_name for rule in rule_options],
         multiselect=True,
     )
 
@@ -24,7 +24,7 @@ def _editor_rules_ask() -> list[EditorRule] | None:
 def _editor_settings_ask() -> list[EditorSetting] | None:
     values = ask(
         msg="Which editor settings do you want to configure? (optional - skip with ctrl+c)",
-        choices=[settings.value for settings in setting_options],
+        choices=[settings.display_name for settings in setting_options],
         multiselect=True,
     )
 

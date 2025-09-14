@@ -26,10 +26,9 @@ def initialize(
         precommit_tools: List of pre-commit tools to use
     """
     if not _check_python_project():
-        return
+        raise RuntimeError("Not a Python project (no pyproject.toml or setup.py found)")
 
     _migrate_requirements_to_pyproject()
-
     selected_package_manager = get_package_manager(package_manager)
     selected_editor_rules = get_editors_rules(editor_rules)
     selected_editor_settings = get_editors_settings(editor_settings)
@@ -57,5 +56,3 @@ def initialize(
             setting.setup()
         log.title("Editor settings setup completed")
         log.info(f"{', '.join(setting.settings_dir for setting in selected_editor_settings)} created")
-
-    return

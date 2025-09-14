@@ -4,10 +4,12 @@ from unittest.mock import patch
 import pytest
 import toml
 
+from ultrapyup.editor import EditorRule, EditorSetting
 from ultrapyup.initialize import (
     initialize,
 )
 from ultrapyup.package_manager import PackageManager
+from ultrapyup.precommit import PreCommitTool
 
 
 class TestInitialize:
@@ -15,14 +17,8 @@ class TestInitialize:
 
     def test_initialize_exits_early_without_project(self, project_dir: Path) -> None:  # noqa: ARG002
         """Test that initialize exits early when no Python project exists."""
-        with patch("InquirerPy.inquirer.select") as mock_inquirer:
-            # Mock get_package_manager inquire call
-            mock_inquirer.return_value.execute.return_value = "uv"
-            result = initialize()
-
-            # Should not call inquirer if no project exists
-            mock_inquirer.assert_not_called()
-            assert result is None
+        with pytest.raises(RuntimeError, match="Not a Python project"):
+            initialize()
 
     def test_initialize_with_minimal_project(
         self, python_empty_project: Path, capsys: pytest.CaptureFixture[str]
@@ -113,9 +109,7 @@ class TestInitialize:
             assert (python_uv_project / ".zed").exists()
             assert not (python_uv_project / ".vscode/settings.json").exists()
 
-    def test_initialize_full_flow_with_pip(
-        self, project_with_requirements: Path, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_initialize_full_flow_with_pip(self, python_pip_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: pip package manager, Zed AI rules, Zed settings, Pre-commit
@@ -127,7 +121,7 @@ class TestInitialize:
             ]
 
             result = initialize()
-            assert (project_with_requirements / "pyproject.toml").exists()
+            assert (python_pip_project / "pyproject.toml").exists()
 
             captured = capsys.readouterr()
             assert "Migrated requirements.txt to pyproject.toml" in captured.out
@@ -146,7 +140,7 @@ class TestInitialize:
             assert ".zed created" in captured.out  # Editor settings created
             assert result is None
 
-            pyproject_path = project_with_requirements / "pyproject.toml"
+            pyproject_path = python_pip_project / "pyproject.toml"
             with open(pyproject_path) as f:
                 pyproject_data = toml.load(f)
 
@@ -156,11 +150,11 @@ class TestInitialize:
             assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
             assert any(dep.startswith("pre-commit>=") for dep in dev_deps)
 
-            assert (project_with_requirements / ".pre-commit-config.yaml").exists()
-            assert not (project_with_requirements / "lefthook.yaml").exists()
-            assert (project_with_requirements / ".rules").exists()
-            assert (project_with_requirements / ".zed").exists()
-            assert not (project_with_requirements / ".vscode/settings.json").exists()
+            assert (python_pip_project / ".pre-commit-config.yaml").exists()
+            assert not (python_pip_project / "lefthook.yaml").exists()
+            assert (python_pip_project / ".rules").exists()
+            assert (python_pip_project / ".zed").exists()
+            assert not (python_pip_project / ".vscode/settings.json").exists()
 
     def test_initialize_full_flow_with_uv(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
@@ -207,14 +201,15 @@ class TestInitialize:
         """Test initialize with CLI parameters (non-interactive mode)."""
         result = initialize(
             package_manager=PackageManager.UV,
-            editor_rules=["cursor-ai", "zed-ai"],
-            editor_settings=["vscode"],
-            precommit_tools=["lefthook"],
+            editor_rules=[EditorRule.ZED_AI, EditorRule.CURSOR_AI],
+            editor_settings=[EditorSetting.VSCODE],
+            precommit_tools=[PreCommitTool.LEFTHOOK],
         )
 
         captured = capsys.readouterr()
         assert "uv" in captured.out  # Package manager selection logged
-        assert "cursor-ai, zed-ai" in captured.out  # Editor rules selection logged
+        assert "zed-ai" in captured.out  # Zed AI editor rule logged
+        assert "cursor-ai" in captured.out  # Cursor AI editor rule logged
         assert "vscode" in captured.out  # Editor settings selection logged
         assert "lefthook" in captured.out  # Precommit tools selection logged
         assert "Dependencies installed" in captured.out
