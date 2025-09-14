@@ -6,8 +6,6 @@ import pytest
 from ultrapyup.editor import (
     EditorRule,
     EditorSetting,
-    editor_rule_setup,
-    editor_settings_setup,
     get_editors_rules,
     get_editors_settings,
 )
@@ -183,7 +181,7 @@ class TestEditorRuleSetup:
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
-            editor_rule_setup(rule)
+            rule.setup()
 
         # Verify file was created with correct content
         target_file = temp_dir / "CLAUDE.md"
@@ -214,7 +212,7 @@ class TestEditorRuleSetup:
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
-            editor_rule_setup(rule)
+            rule.setup()
 
         # Verify file was created with correct content
         target_file = temp_dir / ".rules"
@@ -240,7 +238,7 @@ class TestEditorRuleSetup:
             mock_path.cwd.return_value = temp_dir
 
             with pytest.raises(FileNotFoundError):
-                editor_rule_setup(rule)
+                rule.setup()
 
 
 class TestEditorSettingsSetup:
@@ -261,7 +259,7 @@ class TestEditorSettingsSetup:
             mock_path.cwd.return_value = temp_dir
 
             # Run setup
-            editor_settings_setup(setting)
+            setting.setup()
 
         # Verify directory and files were created
         target_dir = temp_dir / ".vscode"
@@ -301,7 +299,7 @@ class TestEditorSettingsSetup:
             mock_path.cwd.return_value = temp_dir
 
             # Run setup (should merge/overwrite)
-            editor_settings_setup(setting)
+            setting.setup()
 
         # Verify new content overwrites old
         assert (existing_dir / "settings.json").read_text() != content
@@ -326,4 +324,4 @@ class TestEditorSettingsSetup:
             mock_path.cwd.return_value = temp_dir
 
             with pytest.raises(FileNotFoundError):
-                editor_settings_setup(setting)
+                setting.setup()

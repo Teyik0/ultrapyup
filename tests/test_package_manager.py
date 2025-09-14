@@ -9,10 +9,9 @@ from ultrapyup.initialize import _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import (
     PackageManager,
     get_package_manager,
-    install_dependencies,
     options,
-    ruff_config_setup,
 )
+from ultrapyup.pm import install_dependencies, ruff_config_setup
 from ultrapyup.pre_commit import options as pre_commit_options
 
 
@@ -24,7 +23,7 @@ class TestGetPackageManager:
         result = get_package_manager()
 
         assert isinstance(result, PackageManager)
-        assert result.name == "uv"
+        assert result.value == "uv"
         assert result.lockfile == "uv.lock"
 
         captured = capsys.readouterr()
@@ -33,11 +32,11 @@ class TestGetPackageManager:
 
     def test_manual_selection_when_no_lockfile(self) -> None:
         """Test manual selection when no lockfile exists."""
-        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.utils.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "uv"
             result = get_package_manager()
 
-            assert result.name == "uv"
+            assert result.value == "uv"
             assert result.lockfile == "uv.lock"
 
     def test_auto_detect_poetry_lock(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
@@ -45,34 +44,34 @@ class TestGetPackageManager:
         result = get_package_manager()
 
         assert isinstance(result, PackageManager)
-        assert result.name == "poetry"
+        assert result.value == "poetry"
         assert result.lockfile == "poetry.lock"
 
         captured = capsys.readouterr()
         assert "Package manager auto detected" in captured.out
         assert "poetry" in captured.out
 
-    def test_manual_selection_pip(self, project_with_requirements: Path) -> None:  # noqa
+    def test_manual_selection_pip(self, project_dir: Path) -> None:  # noqa
         """Test manual selection of pip."""
-        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.utils.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "pip"
             result = get_package_manager()
 
-            assert result.name == "pip"
+            assert result.value == "pip"
             assert result.lockfile is None
 
     def test_manual_selection_poetry(self, project_dir: Path) -> None:  # noqa
         """Test manual selection of poetry."""
-        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
+        with patch("ultrapyup.package_manager.utils.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "poetry"
             result = get_package_manager()
 
-            assert result.name == "poetry"
+            assert result.value == "poetry"
             assert result.lockfile == "poetry.lock"
 
     def test_invalid_selection_raises_error(self, project_dir: Path) -> None:  # noqa
-        """Test that invalid selection raises ValueError."""
-        with patch("ultrapyup.package_manager.inquirer.select") as mock_inquirer:
+        """Test that invalid selection raises error."""
+        with patch("ultrapyup.package_manager.utils.inquirer.select") as mock_inquirer:
             mock_inquirer.return_value.execute.return_value = "invalid_manager"
 
             with pytest.raises(ValueError, match="Unknown package manager: invalid_manager"):
@@ -111,7 +110,7 @@ class TestInstallDependencies:
 
     def test_install_with_poetry_no_precommit(self, poetry_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test installing dependencies with poetry and no pre-commit tools."""
-        install_dependencies(PackageManager("poetry", "poetry.lock"), None)
+        install_dependencies(PackageManager.POETRY, None)
 
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
@@ -132,7 +131,7 @@ class TestInstallDependencies:
         """Test installing dependencies with poetry and pre-commit tools."""
         # Mock Poetry subprocess to avoid concurrency issues during parallel testing
         # This exception has been made only for poetry
-        with patch("ultrapyup.package_manager.subprocess.run") as mock_run:
+        with patch("ultrapyup.package_manager.pm_class.subprocess.run") as mock_run:
             # Mock successful Poetry command
             mock_result = MagicMock()
             mock_result.returncode = 0
@@ -140,13 +139,22 @@ class TestInstallDependencies:
             mock_result.stderr = ""
             mock_run.return_value = mock_result
 
-            install_dependencies(PackageManager("poetry", "poetry.lock"), [pre_commit_options[0]])
+            install_dependencies(PackageManager.POETRY, pre_commit_options)
 
             # Verify Poetry command was called correctly
             mock_run.assert_called_once()
             called_cmd = mock_run.call_args[0][0]
-            assert called_cmd == ["poetry", "add", "--group", "dev", "ruff", "ty", "ultrapyup", "lefthook"]
-
+            assert called_cmd == [
+                "poetry",
+                "add",
+                "--group",
+                "dev",
+                "ruff",
+                "ty",
+                "ultrapyup",
+                "lefthook",
+                "pre-commit",
+            ]
         captured = capsys.readouterr()
         assert "Dependencies installed" in captured.out
         assert "ruff, ty, ultrapyup, lefthook" in captured.out

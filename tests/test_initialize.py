@@ -7,6 +7,7 @@ import toml
 from ultrapyup.initialize import (
     initialize,
 )
+from ultrapyup.package_manager import PackageManager
 
 
 class TestInitialize:
@@ -201,3 +202,51 @@ class TestInitialize:
             assert (python_uv_project / ".github/copilot-instructions.md").exists()
             assert not (python_uv_project / ".zed").exists()
             assert (python_uv_project / ".vscode").exists()
+
+    def test_initialize_with_cli_parameters(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """Test initialize with CLI parameters (non-interactive mode)."""
+        result = initialize(
+            package_manager=PackageManager.UV,
+            editor_rules=["cursor-ai", "zed-ai"],
+            editor_settings=["vscode"],
+            precommit_tools=["lefthook"],
+        )
+
+        captured = capsys.readouterr()
+        assert "uv" in captured.out  # Package manager selection logged
+        assert "cursor-ai, zed-ai" in captured.out  # Editor rules selection logged
+        assert "vscode" in captured.out  # Editor settings selection logged
+        assert "lefthook" in captured.out  # Precommit tools selection logged
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapyup, lefthook" in captured.out
+        assert "Pre-commit setup completed" in captured.out
+        assert "AI rules setup completed" in captured.out
+        assert "Editor settings setup completed" in captured.out
+        assert result is None
+
+        # Verify files were created
+        assert (python_uv_project / "lefthook.yaml").exists()
+        assert (python_uv_project / ".cursorrules").exists()
+        assert (python_uv_project / ".rules").exists()
+        assert (python_uv_project / ".vscode").exists()
+
+    def test_initialize_with_empty_cli_parameters(
+        self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Test initialize with empty CLI parameters (skip all optional features)."""
+        result = initialize(package_manager=PackageManager.UV, editor_rules=[], editor_settings=[], precommit_tools=[])
+
+        captured = capsys.readouterr()
+        assert "uv" in captured.out  # Package manager selection logged
+        assert "none" in captured.out  # Should appear 3 times for empty lists
+        assert "Dependencies installed" in captured.out
+        assert "ruff, ty, ultrapyup" in captured.out  # Only core dependencies
+        assert "Pre-commit setup completed" not in captured.out
+        assert "AI rules setup completed" not in captured.out
+        assert "Editor settings setup completed" not in captured.out
+        assert result is None
+
+        # Verify no optional files were created
+        assert not (python_uv_project / "lefthook.yaml").exists()
+        assert not (python_uv_project / ".cursorrules").exists()
+        assert not (python_uv_project / ".vscode").exists()

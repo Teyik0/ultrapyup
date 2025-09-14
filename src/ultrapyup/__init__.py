@@ -2,7 +2,10 @@ from typing import Annotated
 
 import typer
 
+from ultrapyup.editor import EditorRule, EditorSetting
 from ultrapyup.initialize import initialize
+from ultrapyup.package_manager.pm import PackageManager
+from ultrapyup.types import PreCommitToolType
 from ultrapyup.utils import log
 
 
@@ -14,10 +17,48 @@ app = typer.Typer(
 
 
 @app.command("init", help="Initialize Ultrapyup in the current directory")
-def init_command() -> None:
+def init_command(
+    package_manager: Annotated[
+        PackageManager | None,
+        typer.Option(
+            "--package-manager",
+            "-pm",
+            help="Package manager to use (uv, poetry, pip)",
+        ),
+    ] = None,
+    editor_rules: Annotated[
+        list[EditorRule] | None,
+        typer.Option(
+            "--editor-rules",
+            "-er",
+            help="AI rules to enable (github-copilot, cursor-ai, windsurf-ai, claude-md, zed-ai)",
+        ),
+    ] = None,
+    editor_settings: Annotated[
+        list[EditorSetting] | None,
+        typer.Option(
+            "--editor-settings",
+            "-es",
+            help="Editor settings to configure (vscode, cursor, windsurf, kiro, zed)",
+        ),
+    ] = None,
+    precommit_tools: Annotated[
+        list[PreCommitToolType] | None,
+        typer.Option(
+            "--precommit-tools",
+            "-pc",
+            help="Pre-commit tools to use (lefthook, pre-commit)",
+        ),
+    ] = None,
+) -> None:
     """Initialize Ultrapyup in the current directory."""
     try:
-        initialize()
+        initialize(
+            package_manager=package_manager,
+            editor_rules=editor_rules,
+            editor_settings=[setting.value for setting in editor_settings] if editor_settings else None,
+            precommit_tools=[tool.value for tool in precommit_tools] if precommit_tools else None,
+        )
     except Exception as e:
         log.error(f"Initialization failed: {e}")
 

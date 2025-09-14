@@ -9,9 +9,9 @@ def _get_python_version() -> str:
     return f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
-def _migrate_requirements_to_pyproject() -> None:
+def _migrate_requirements_to_pyproject(project_dir: Path = Path(".")) -> None:
     """Migrate requirements.txt to pyproject.toml if needed."""
-    requirements_path = Path("requirements.txt")
+    requirements_path = project_dir / "requirements.txt"
     pyproject_path = Path("pyproject.toml")
 
     if not requirements_path.exists() or pyproject_path.exists():

@@ -69,7 +69,7 @@ def python_empty_project(project_dir: Path) -> Path:
 
 
 @pytest.fixture
-def project_with_requirements(python_empty_project: Path) -> Path:
+def python_pip_project(python_empty_project: Path) -> Path:
     """Create a project with requirements.txt."""
     requirements_content = """# Test requirements
 requests==2.31.0
@@ -87,7 +87,7 @@ ruff>=0.1.0
 
 
 @pytest.fixture
-def poetry_project(python_uv_project: Path) -> Path:
+def python_poetry_project(python_uv_project: Path) -> Path:
     """Create a Python project using uv project fixture, then delete uv.lock and run poetry sync."""
     venv_path = python_uv_project / ".venv"
     if venv_path.exists():
