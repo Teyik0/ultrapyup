@@ -68,6 +68,7 @@ class TestPackageManagerPoetry:
     def test_add_with_poetry_success(self, python_poetry_project: Path) -> None:  # noqa: ARG002
         """Test successful package installation with poetry."""
         pm = PackageManager.POETRY
+
         deps = ["pytest"]
         pm.add(deps)
         assert_deps_updated(deps, pm)
