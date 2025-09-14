@@ -12,7 +12,7 @@ class TestPackageManagerAsk:
     def test_package_manager_ask_success_uv(self) -> None:
         """Test user prompt for package manager selection."""
         with patch("ultrapyup.package_manager.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = "uv"
+            mock_inquirer.return_value = "uv"
             result = _package_manager_ask()
 
             assert result.value == "uv"
@@ -21,7 +21,7 @@ class TestPackageManagerAsk:
     def test_package_manager_ask_success_poetry(self) -> None:
         """Test user prompt for package manager selection."""
         with patch("ultrapyup.package_manager.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = "poetry"
+            mock_inquirer.return_value = "poetry"
             result = _package_manager_ask()
 
             assert result.value == "poetry"
@@ -30,7 +30,7 @@ class TestPackageManagerAsk:
     def test_package_manager_ask_success_pip(self) -> None:
         """Test user prompt for package manager selection."""
         with patch("ultrapyup.package_manager.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = "pip"
+            mock_inquirer.return_value = "pip"
             result = _package_manager_ask()
 
             assert result.value == "pip"
@@ -39,7 +39,7 @@ class TestPackageManagerAsk:
     def test_package_manager_failure(self) -> None:
         """Test user prompt for package manager selection."""
         with patch("ultrapyup.package_manager.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = "pm"
+            mock_inquirer.return_value = "pm"
             with pytest.raises(ValueError, match="Unknown package manager: pm"):
                 _package_manager_ask()
 

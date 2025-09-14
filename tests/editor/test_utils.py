@@ -15,7 +15,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_zed_success(self) -> None:
         """Test user prompt for editor rules selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [EditorRule.ZED_AI.display_name]
+            mock_inquirer.return_value = [EditorRule.ZED_AI.display_name]
             result = _editor_rules_ask()
 
             assert result is not None
@@ -26,7 +26,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_multiple_success(self) -> None:
         """Test user prompt for multiple editor rules selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [
+            mock_inquirer.return_value = [
                 EditorRule.ZED_AI.display_name,
                 EditorRule.CURSOR_AI.display_name,
             ]
@@ -41,7 +41,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_github_copilot_success(self) -> None:
         """Test user prompt for GitHub Copilot rule selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [EditorRule.GITHUB_COPILOT.display_name]
+            mock_inquirer.return_value = [EditorRule.GITHUB_COPILOT.display_name]
             result = _editor_rules_ask()
 
             assert result is not None
@@ -51,7 +51,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_all_rules_success(self) -> None:
         """Test user prompt for all editor rules selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [rule.display_name for rule in EditorRule]
+            mock_inquirer.return_value = [rule.display_name for rule in EditorRule]
             result = _editor_rules_ask()
 
             assert result is not None
@@ -62,7 +62,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_empty_selection(self) -> None:
         """Test user prompt with empty selection (skip)."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = []
+            mock_inquirer.return_value = []
             result = _editor_rules_ask()
 
             assert result is None
@@ -70,7 +70,7 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_none_selection(self) -> None:
         """Test user prompt with None selection (Ctrl+C)."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = None
+            mock_inquirer.return_value = None
             result = _editor_rules_ask()
 
             assert result is None
@@ -82,7 +82,7 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_vscode_success(self) -> None:
         """Test user prompt for VSCode settings selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [EditorSetting.VSCODE.display_name]
+            mock_inquirer.return_value = [EditorSetting.VSCODE.display_name]
             result = _editor_settings_ask()
 
             assert result is not None
@@ -93,7 +93,7 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_zed_success(self) -> None:
         """Test user prompt for Zed settings selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [EditorSetting.ZED.display_name]
+            mock_inquirer.return_value = [EditorSetting.ZED.display_name]
             result = _editor_settings_ask()
 
             assert result is not None
@@ -104,7 +104,7 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_multiple_vscode_compatible(self) -> None:
         """Test user prompt for multiple VSCode-compatible settings (should deduplicate)."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [
+            mock_inquirer.return_value = [
                 EditorSetting.VSCODE.display_name,
                 EditorSetting.CURSOR.display_name,
                 EditorSetting.WINDSURF.display_name,
@@ -119,7 +119,7 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_different_settings_dirs(self) -> None:
         """Test user prompt for settings with different directories."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [
+            mock_inquirer.return_value = [
                 EditorSetting.VSCODE.display_name,
                 EditorSetting.ZED.display_name,
             ]
@@ -136,7 +136,7 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_all_settings_success(self) -> None:
         """Test user prompt for all editor settings selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = [setting.display_name for setting in EditorSetting]
+            mock_inquirer.return_value = [setting.display_name for setting in EditorSetting]
             result = _editor_settings_ask()
 
             assert result is not None
@@ -148,16 +148,16 @@ class TestEditorSettingsAsk:
 
     def test_editor_settings_ask_empty_selection(self) -> None:
         """Test user prompt with empty selection (skip)."""
-        with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = []
+        with patch("ultrapyup.editor.utils.ask") as mock_ask:
+            mock_ask.return_value = []
             result = _editor_settings_ask()
 
             assert result is None
 
     def test_editor_settings_ask_none_selection(self) -> None:
         """Test user prompt with None selection (Ctrl+C)."""
-        with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value.execute.return_value = None
+        with patch("ultrapyup.editor.utils.ask") as mock_ask:
+            mock_ask.return_value = None
             result = _editor_settings_ask()
 
             assert result is None

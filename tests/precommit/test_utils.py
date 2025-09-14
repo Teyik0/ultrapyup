@@ -33,7 +33,7 @@ class TestGetPreCommitTools:
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_ask.select.return_value.execute.return_value = ["Lefthook", "Pre-commit"]
+            mock_ask.return_value = ["Lefthook", "Pre-commit"]
 
             result = get_precommit_tools(None)
 
@@ -47,7 +47,7 @@ class TestGetPreCommitTools:
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_ask.select.return_value.execute.return_value = ["Lefthook"]
+            mock_ask.return_value = ["Lefthook"]
 
             result = get_precommit_tools(None)
 
@@ -60,7 +60,7 @@ class TestGetPreCommitTools:
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_ask.select.return_value.execute.return_value = []
+            mock_ask.return_value = []
 
             result = get_precommit_tools(None)
 
@@ -73,7 +73,7 @@ class TestGetPreCommitTools:
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_ask.select.return_value.execute.return_value = None
+            mock_ask.return_value = None
 
             result = get_precommit_tools(None)
 
