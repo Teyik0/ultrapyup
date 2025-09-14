@@ -60,8 +60,6 @@ def get_editors_settings(editor_settings: list[EditorSetting] | None = None) -> 
 __all__ = [
     "EditorRule",
     "EditorSetting",
-    "get_editors_rules",
-    "get_editors_settings",
     "rule_options",
     "setting_options",
 ]
