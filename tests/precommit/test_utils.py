@@ -30,10 +30,10 @@ class TestGetPreCommitTools:
     def test_get_precommit_tools_with_none(self) -> None:
         """Test get_precommit_tools with None as input."""
         with (
-            patch("ultrapyup.precommit.utils.inquirer") as mock_inquirer,
+            patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_inquirer.select.return_value.execute.return_value = ["Lefthook", "Pre-commit"]
+            mock_ask.select.return_value.execute.return_value = ["Lefthook", "Pre-commit"]
 
             result = get_precommit_tools(None)
 
@@ -44,10 +44,10 @@ class TestGetPreCommitTools:
     def test_get_precommit_tools_interactive_single_selection(self) -> None:
         """Test interactive selection of single precommit tool."""
         with (
-            patch("ultrapyup.precommit.utils.inquirer") as mock_inquirer,
+            patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_inquirer.select.return_value.execute.return_value = ["Lefthook"]
+            mock_ask.select.return_value.execute.return_value = ["Lefthook"]
 
             result = get_precommit_tools(None)
 
@@ -57,10 +57,10 @@ class TestGetPreCommitTools:
     def test_get_precommit_tools_interactive_no_selection(self) -> None:
         """Test interactive selection with no tools selected."""
         with (
-            patch("ultrapyup.precommit.utils.inquirer") as mock_inquirer,
+            patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_inquirer.select.return_value.execute.return_value = []
+            mock_ask.select.return_value.execute.return_value = []
 
             result = get_precommit_tools(None)
 
@@ -70,10 +70,10 @@ class TestGetPreCommitTools:
     def test_get_precommit_tools_interactive_cancel(self) -> None:
         """Test interactive selection when user cancels (ctrl+c)."""
         with (
-            patch("ultrapyup.precommit.utils.inquirer") as mock_inquirer,
+            patch("ultrapyup.precommit.utils.ask") as mock_ask,
             patch("ultrapyup.precommit.utils.log") as mock_log,
         ):
-            mock_inquirer.select.return_value.execute.return_value = None
+            mock_ask.select.return_value.execute.return_value = None
 
             result = get_precommit_tools(None)
 
