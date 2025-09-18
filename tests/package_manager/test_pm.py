@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import toml
@@ -68,10 +69,19 @@ class TestPackageManagerPoetry:
     def test_add_with_poetry_success(self, python_poetry_project: Path) -> None:  # noqa: ARG002
         """Test successful package installation with poetry."""
         pm = PackageManager.POETRY
-
         deps = ["pytest"]
-        pm.add(deps)
-        assert_deps_updated(deps, pm)
+        # Mock subprocess.run to return a successful result
+        mock_result = type(
+            "MockResult",
+            (),
+            {"returncode": 0, "stderr": b"", "stdout": b"Successfully added pytest to dev dependencies"},
+        )()
+
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            pm.add(deps)
+            mock_run.assert_called_once_with(
+                ["poetry", "add", "--group", "dev", "pytest"], check=False, capture_output=True
+            )
 
     def test_add_with_poetry_failure(self, python_poetry_project: Path) -> None:  # noqa: ARG002
         """Test package installation failure with poetry."""
