@@ -163,7 +163,7 @@ class TestRuffConfigSetup:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """Test ruff_config_setup when no configuration exists."""
-        ruff_file, _ = self._clean_ruff_conf()
+        ruff_file, _ = _clean_ruff_conf()
         result = ruff_config_setup()
 
         assert result is None
