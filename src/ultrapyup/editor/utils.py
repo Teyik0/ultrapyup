@@ -14,7 +14,7 @@ def _editor_rules_ask() -> list[EditorRule] | None:
         multiselect=True,
     )
 
-    if not selected_rules:
+    if not selected_rules or any(rule == "skip" for rule in selected_rules):
         return None
 
     rules: list[EditorRule] = [rule for rule in rule_options if rule.display_name in selected_rules]
@@ -28,7 +28,7 @@ def _editor_settings_ask() -> list[EditorSetting] | None:
         multiselect=True,
     )
 
-    if not values:
+    if not values or any(value == "skip" for value in values):
         return None
 
     settings: list[EditorSetting] = [setting for setting in setting_options if setting.display_name in values]

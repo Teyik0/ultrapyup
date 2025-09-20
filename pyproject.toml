@@ -22,12 +22,12 @@ dev = [
 requires = ["uv_build>=0.8.0,<0.9"]
 build-backend = "uv_build"
 
+[project.scripts]
+ultrapyup = "ultrapyup:app"
+
 [project.urls]
 Homepage = "https://github.com/teyik0/ultrapyup"
 Repository = "https://github.com/teyik0/ultrapyup"
-
-[project.scripts]
-ultrapyup = "ultrapyup:app"
 
 [tool.ruff]
 extend = "src/ultrapyup/resources/ruff_base.toml"

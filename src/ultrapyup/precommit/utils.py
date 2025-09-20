@@ -14,7 +14,7 @@ def _precommit_tools_ask() -> list[PreCommitTool] | None:
         multiselect=True,
     )
 
-    if not values:
+    if not values or any(value == "skip" for value in values):
         return None
 
     selected_tools = [tool for tool in PreCommitTool if tool.display_name in values]
