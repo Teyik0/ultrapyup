@@ -1,457 +1,315 @@
-"""Tests for ultrapyup.config.ty module."""
-
-from __future__ import annotations
-
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 import toml
+from _pytest.capture import CaptureResult
 
-from ultrapyup.config.ty import (
-    TyConfigError,
-    TyConfigResult,
-    _apply_fallback_config,
-    _check_pyproject_exists,
-    _check_ty_config_exists,
-    _load_pyproject_config,
-    get_ty_config_info,
-    ty_config_setup,
-    validate_ty_config,
-)
+from ultrapyup.config.ty import _create_ty_config, _ty_conf_exist, ty_config_setup
 from ultrapyup.layout import LayoutDetection, ProjectLayout
 
 
-class TestTyConfigError:
-    """Test TyConfigError exception."""
-
-    def test_init_with_message_only(self) -> None:
-        """Test TyConfigError initialization with message only."""
-        error = TyConfigError("Test error")
-        assert str(error) == "Test error"
-        assert error.cause is None
-
-    def test_init_with_cause(self) -> None:
-        """Test TyConfigError initialization with cause."""
-        cause = ValueError("Original error")
-        error = TyConfigError("Test error", cause=cause)
-        assert str(error) == "Test error"
-        assert error.cause is cause
+def _assert_ty_conf_skipped(captured: CaptureResult[str]) -> None:
+    assert "Keeping existing configuration" in captured.out
 
 
-class TestTyConfigResult:
-    """Test TyConfigResult model."""
-
-    def test_default_values(self) -> None:
-        """Test default values for TyConfigResult."""
-        result = TyConfigResult(success=True)
-        assert result.success is True
-        assert result.layout_detected is None
-        assert result.config_exists is False
-        assert result.fallback_used is False
-        assert result.error_message is None
-
-    def test_all_fields(self) -> None:
-        """Test TyConfigResult with all fields set."""
-        layout = LayoutDetection(
-            layout=ProjectLayout.SRC_LAYOUT,
-            root_paths=["./src"],
-            package_name="test_package",
-        )
-        result = TyConfigResult(
-            success=True,
-            layout_detected=layout,
-            config_exists=True,
-            fallback_used=True,
-            error_message="Test error",
-        )
-        assert result.success is True
-        assert result.layout_detected == layout
-        assert result.config_exists is True
-        assert result.fallback_used is True
-        assert result.error_message == "Test error"
+def _assert_ty_conf_overwritten(captured: CaptureResult[str]) -> None:
+    assert "Ty configuration setup completed" in captured.out
+    assert "ty configuration updated in pyproject.toml" in captured.out
 
 
-class TestCheckPyprojectExists:
-    """Test _check_pyproject_exists function."""
-
-    def test_exists(self, project_dir: Path) -> None:
-        """Test when pyproject.toml exists."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[tool.poetry]\nname = 'test'")
-
-        # Should not raise
-        _check_pyproject_exists(pyproject_path)
-
-    def test_not_exists(self, project_dir: Path) -> None:
-        """Test when pyproject.toml doesn't exist."""
-        pyproject_path = project_dir / "pyproject.toml"
-
-        with pytest.raises(TyConfigError, match=r"No pyproject\.toml found"):
-            _check_pyproject_exists(pyproject_path)
+def _assert_ty_conf_complete(captured: CaptureResult[str]) -> None:
+    assert "Ty configuration setup completed" in captured.out
+    assert "ty configuration added to pyproject.toml" in captured.out
 
 
-class TestLoadPyprojectConfig:
-    """Test _load_pyproject_config function."""
-
-    def test_valid_toml(self, project_dir: Path) -> None:
-        """Test loading valid TOML file."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"tool": {"poetry": {"name": "test"}}}
-        pyproject_path.write_text(toml.dumps(config))
-
-        result = _load_pyproject_config(pyproject_path)
-        assert result == config
-
-    def test_invalid_toml(self, project_dir: Path) -> None:
-        """Test loading invalid TOML file."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("invalid toml [")
-
-        # With new approach, toml.load will raise directly
-        with pytest.raises(toml.TomlDecodeError):
-            _load_pyproject_config(pyproject_path)
-
-    def test_file_not_found(self, project_dir: Path) -> None:
-        """Test loading non-existent file."""
-        pyproject_path = project_dir / "nonexistent.toml"
-
-        with pytest.raises(TyConfigError, match=r"pyproject\.toml is not a valid file"):
-            _load_pyproject_config(pyproject_path)
-
-    def test_empty_file(self, project_dir: Path) -> None:
-        """Test loading empty TOML file."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("")
-
-        # Empty files now return empty dict instead of raising error
-        result = _load_pyproject_config(pyproject_path)
-        assert result == {}
-
-    def test_invalid_format(self, project_dir: Path) -> None:
-        """Test loading file that doesn't result in dictionary."""
-        pyproject_path = project_dir / "pyproject.toml"
-        # Create TOML that parses to a non-dict (array at root level)
-        pyproject_path.write_text('[[array]]\nname = "test"')
-
-        # This will parse as a dict with 'array' key, so it won't trigger our validation
-        # Let's test with actual invalid TOML instead
-        pyproject_path.write_text("= invalid")
-
-        with pytest.raises(toml.TomlDecodeError):
-            _load_pyproject_config(pyproject_path)
+def _clean_ty_conf() -> Path:
+    pyproject_file = Path.cwd() / "pyproject.toml"
+    if pyproject_file.exists():
+        pyproject_file.unlink()
+    return pyproject_file
 
 
-class TestCheckTyConfigExists:
-    """Test _check_ty_config_exists function."""
+def _get_expected_ty_config() -> dict:
+    return {
+        "environment": {"root": ["./src"]},
+    }
 
-    def test_ty_config_exists(self) -> None:
-        """Test when ty config exists."""
+
+def _get_default_layout() -> LayoutDetection:
+    """Get a default layout for testing."""
+    return LayoutDetection(layout=ProjectLayout.SRC_LAYOUT, root_paths=["./src"], package_name="test_package")
+
+
+class TestTyConfExist:
+    """Tests for _ty_conf_exist function."""
+
+    def test_pyproject_toml_with_ty_config(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test when pyproject.toml contains [tool.ty] section."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
         config = {"tool": {"ty": {"environment": {"root": ["./src"]}}}}
-        assert _check_ty_config_exists(config) is True
+        with open(pyproject_file, "w") as f:
+            toml.dump(config, f)
 
-    def test_ty_config_not_exists_no_tool(self) -> None:
-        """Test when no tool section exists."""
-        config = {"project": {"name": "test"}}
-        assert _check_ty_config_exists(config) is False
+        assert _ty_conf_exist() is True
 
-    def test_ty_config_not_exists_no_ty(self) -> None:
-        """Test when tool section exists but no ty."""
-        config = {"tool": {"poetry": {"name": "test"}}}
-        assert _check_ty_config_exists(config) is False
+    def test_pyproject_toml_without_ty_config(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test when pyproject.toml exists but has no [tool.ty] section."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        config = {"tool": {"ruff": {"line-length": 88}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(config, f)
 
-    def test_empty_config(self) -> None:
-        """Test with empty config."""
-        config = {}
-        assert _check_ty_config_exists(config) is False
+        assert _ty_conf_exist() is False
+
+    def test_pyproject_toml_does_not_exist(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test when pyproject.toml doesn't exist."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        if pyproject_file.exists():
+            pyproject_file.unlink()
+
+        assert _ty_conf_exist() is False
+
+    def test_empty_pyproject_toml(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test when pyproject.toml is empty."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        pyproject_file.write_text("")
+
+        assert _ty_conf_exist() is False
+
+    def test_malformed_pyproject_toml(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test when pyproject.toml is malformed."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        pyproject_file.write_text("invalid toml content [")
+
+        with pytest.raises(toml.TomlDecodeError):
+            _ty_conf_exist()
 
 
-class TestApplyFallbackConfig:
-    """Test _apply_fallback_config function."""
+class TestCreateTyConfig:
+    """Tests for _create_ty_config function."""
 
-    def test_apply_to_empty_config(self, project_dir: Path) -> None:
-        """Test applying fallback config to empty file."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("")
+    def test_create_ty_config_success(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test successful creation of ty config in pyproject.toml."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        if pyproject_file.exists():
+            pyproject_file.unlink()
 
-        _apply_fallback_config(pyproject_path)
+        _create_ty_config(_get_default_layout())
 
-        config = toml.load(pyproject_path)
+        assert pyproject_file.exists()
+        with open(pyproject_file) as f:
+            config = toml.load(f)
         assert "tool" in config
         assert "ty" in config["tool"]
-        assert "environment" in config["tool"]["ty"]
-        assert "rules" in config["tool"]["ty"]
-        assert "src" in config["tool"]["ty"]
+        assert config["tool"]["ty"] == _get_expected_ty_config()
 
-    def test_apply_to_existing_config(self, project_dir: Path) -> None:
-        """Test applying fallback config to existing config."""
-        pyproject_path = project_dir / "pyproject.toml"
-        initial_config = {"project": {"name": "test"}}
-        pyproject_path.write_text(toml.dumps(initial_config))
+    def test_create_ty_config_with_existing_pyproject(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test creation of ty config when pyproject.toml already exists with other tools."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        existing_config = {"tool": {"ruff": {"line-length": 88}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(existing_config, f)
 
-        _apply_fallback_config(pyproject_path)
+        _create_ty_config(_get_default_layout())
 
-        config = toml.load(pyproject_path)
-        assert config["project"]["name"] == "test"  # Preserved
+        with open(pyproject_file) as f:
+            config = toml.load(f)
         assert "tool" in config
         assert "ty" in config["tool"]
+        assert "ruff" in config["tool"]  # Original config preserved
+        assert config["tool"]["ty"] == _get_expected_ty_config()
+        assert config["tool"]["ruff"]["line-length"] == 88
 
-    def test_apply_with_existing_tool_section(self, project_dir: Path) -> None:
-        """Test applying fallback config with existing tool section."""
-        pyproject_path = project_dir / "pyproject.toml"
-        initial_config = {"tool": {"poetry": {"name": "test"}}}
-        pyproject_path.write_text(toml.dumps(initial_config))
+    def test_create_ty_config_overwrites_existing_ty(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test that _create_ty_config overwrites existing ty config."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        config = {"tool": {"ty": {"old": "config"}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(config, f)
 
-        _apply_fallback_config(pyproject_path)
+        _create_ty_config(_get_default_layout())
 
-        config = toml.load(pyproject_path)
-        assert config["tool"]["poetry"]["name"] == "test"  # Preserved
-        assert "ty" in config["tool"]
-
-    def test_apply_to_readonly_file(self, project_dir: Path) -> None:
-        """Test applying fallback config to readonly file."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test'")  # Add some content
-        pyproject_path.chmod(0o444)  # Read-only
-
-        # With new approach, OS will raise PermissionError directly
-        with pytest.raises(PermissionError):
-            _apply_fallback_config(pyproject_path)
+        with open(pyproject_file) as f:
+            updated_config = toml.load(f)
+        assert updated_config["tool"]["ty"] == _get_expected_ty_config()
+        assert "old" not in updated_config["tool"]["ty"]
 
 
 class TestTyConfigSetup:
-    """Test ty_config_setup function."""
+    """Tests for ty_config_setup function."""
 
-    def test_no_pyproject(self, project_dir: Path) -> None:
-        """Test setup when no pyproject.toml exists."""
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = ty_config_setup()
+    def test_ty_config_setup_when_config_exists_user_says_no(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test ty_config_setup when configuration exists and user chooses not to overwrite."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        original_config = {"tool": {"ty": {"old": "config"}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(original_config, f)
 
-            assert result.success is False
-            assert result.error_message == "No pyproject.toml found"
+        with patch("ultrapyup.config.ty.ask") as mock_ask:
+            mock_ask.return_value = "no"
+            result = ty_config_setup(_get_default_layout())
 
-    def test_existing_ty_config(self, project_dir: Path) -> None:
-        """Test setup when ty config already exists."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"tool": {"ty": {"environment": {"root": ["./src"]}}}}
-        pyproject_path.write_text(toml.dumps(config))
+            assert result is None
+            with open(pyproject_file) as f:
+                config = toml.load(f)
+            assert config == original_config
+            mock_ask.assert_called_once_with(
+                "Ty configuration already exists. Do you want to overwrite it?",
+                choices=["yes", "no"],
+                multiselect=False,
+            )
+            _assert_ty_conf_skipped(capsys.readouterr())
 
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = ty_config_setup()
+    def test_ty_config_setup_when_config_exists_user_says_yes(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test ty_config_setup when configuration exists and user chooses to overwrite."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        config = {"tool": {"ty": {"old": "config"}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(config, f)
 
-            assert result.success is True
-            assert result.config_exists is True
+        with patch("ultrapyup.config.ty.ask") as mock_ask:
+            mock_ask.return_value = "yes"
+            result = ty_config_setup(_get_default_layout())
 
-    @patch("ultrapyup.config.ty.detect_project_layout")
-    @patch("ultrapyup.config.ty.apply_ty_config")
-    def test_successful_layout_detection(self, mock_apply: Mock, mock_detect: Mock, project_dir: Path) -> None:
-        """Test successful setup with layout detection."""
-        layout = LayoutDetection(
-            layout=ProjectLayout.SRC_LAYOUT,
-            root_paths=["./src"],
-            package_name="test_package",
+            assert result is None
+            with open(pyproject_file) as f:
+                updated_config = toml.load(f)
+            assert updated_config["tool"]["ty"] == _get_expected_ty_config()
+            mock_ask.assert_called_once_with(
+                "Ty configuration already exists. Do you want to overwrite it?",
+                choices=["yes", "no"],
+                multiselect=False,
+            )
+            _assert_ty_conf_overwritten(capsys.readouterr())
+
+    def test_ty_config_setup_when_no_config_exists(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test ty_config_setup when no configuration exists."""
+        pyproject_file = _clean_ty_conf()
+
+        result = ty_config_setup(_get_default_layout())
+
+        assert result is None
+        assert pyproject_file.exists()
+        with open(pyproject_file) as f:
+            config = toml.load(f)
+        assert "tool" in config
+        assert "ty" in config["tool"]
+        assert config["tool"]["ty"] == _get_expected_ty_config()
+        _assert_ty_conf_complete(capsys.readouterr())
+
+    def test_ty_config_setup_preserves_existing_config_when_user_says_no(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test that ty_config_setup doesn't overwrite existing configuration when user says no."""
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        original_config = {"tool": {"ty": {"custom": "settings"}, "ruff": {"line-length": 88}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(original_config, f)
+
+        with patch("ultrapyup.config.ty.ask") as mock_ask:
+            mock_ask.return_value = "no"
+            ty_config_setup(_get_default_layout())
+            with open(pyproject_file) as f:
+                config = toml.load(f)
+            assert config == original_config
+            _assert_ty_conf_skipped(capsys.readouterr())
+
+    def test_ty_config_setup_creates_pyproject_when_none_exists(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test that ty_config_setup creates pyproject.toml when it doesn't exist."""
+        pyproject_file = _clean_ty_conf()
+        assert not pyproject_file.exists()
+
+        with patch("ultrapyup.config.ty.ask") as mock_ask:
+            mock_ask.return_value = "yes"  # Should not be called, but just in case
+            ty_config_setup(_get_default_layout())
+
+            assert pyproject_file.exists()
+            with open(pyproject_file) as f:
+                config = toml.load(f)
+            assert "tool" in config
+            assert "ty" in config["tool"]
+            assert config["tool"]["ty"] == _get_expected_ty_config()
+            _assert_ty_conf_complete(capsys.readouterr())
+
+
+class TestTyConfigEdgeCases:
+    """Tests for edge cases and error conditions."""
+
+    def test_concurrent_ty_config_setup(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
+        """Test that multiple consecutive setups work correctly."""
+        # First call should create the config (no existing config)
+        pyproject_file = _clean_ty_conf()
+        result = ty_config_setup(_get_default_layout())
+        assert result is None
+        assert pyproject_file.exists()
+        with open(pyproject_file) as f:
+            config = toml.load(f)
+        assert config["tool"]["ty"] == _get_expected_ty_config()
+        _assert_ty_conf_complete(capsys.readouterr())
+
+        # Second call should prompt user (config now exists)
+        with patch("ultrapyup.config.ty.ask") as mock_ask:
+            mock_ask.return_value = "no"
+            ty_config_setup(_get_default_layout())
+            assert result is None
+            assert pyproject_file.exists()
+            with open(pyproject_file) as f:
+                config = toml.load(f)
+            assert config["tool"]["ty"] == _get_expected_ty_config()
+            mock_ask.assert_called_once_with(
+                "Ty configuration already exists. Do you want to overwrite it?",
+                choices=["yes", "no"],
+                multiselect=False,
+            )
+            _assert_ty_conf_skipped(capsys.readouterr())
+
+    def test_ty_config_setup_with_different_layouts(self, project_dir: Path) -> None:  # noqa: ARG002
+        """Test that ty_config_setup uses different root paths based on layout."""
+        pyproject_file = _clean_ty_conf()
+
+        # Test with flat layout
+        flat_layout = LayoutDetection(layout=ProjectLayout.FLAT_LAYOUT, root_paths=["./"], package_name=None)
+        ty_config_setup(flat_layout)
+
+        with open(pyproject_file) as f:
+            config = toml.load(f)
+        assert config["tool"]["ty"]["environment"]["root"] == ["./"]
+
+        # Clean and test with app layout
+        pyproject_file.unlink()
+        app_layout = LayoutDetection(layout=ProjectLayout.APP_LAYOUT, root_paths=["./app"], package_name="myapp")
+        ty_config_setup(app_layout)
+
+        with open(pyproject_file) as f:
+            config = toml.load(f)
+        assert config["tool"]["ty"]["environment"]["root"] == ["./app"]
+
+        # Clean and test with package layout
+        pyproject_file.unlink()
+        package_layout = LayoutDetection(
+            layout=ProjectLayout.PACKAGE_LAYOUT, root_paths=["./mypackage"], package_name="mypackage"
         )
-        mock_detect.return_value = layout
+        ty_config_setup(package_layout)
 
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test'")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = ty_config_setup()
-
-            assert result.success is True
-            assert result.layout_detected == layout
-            assert not result.fallback_used
-            mock_detect.assert_called_once()
-            mock_apply.assert_called_once_with(layout)
-
-    def test_layout_detection_fails_fallback_succeeds(self, project_dir: Path) -> None:
-        """Test fallback when layout detection fails."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test'")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # Mock detect_project_layout to return unknown layout (triggers fallback)
-            unknown_layout = LayoutDetection(
-                layout=ProjectLayout.UNKNOWN,
-                root_paths=["./"],
-                package_name=None,
-            )
-            with patch("ultrapyup.config.ty.detect_project_layout", return_value=unknown_layout):
-                result = ty_config_setup()
-
-                assert result.success is True
-                assert result.fallback_used is True
-
-    def test_both_detection_and_fallback_fail(self, project_dir: Path) -> None:
-        """Test when both detection and fallback fail."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test'")
-        pyproject_path.chmod(0o444)  # Make readonly so fallback fails
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # Mock detect_project_layout to return unknown layout (triggers fallback)
-            unknown_layout = LayoutDetection(
-                layout=ProjectLayout.UNKNOWN,
-                root_paths=["./"],
-                package_name=None,
-            )
-            with patch("ultrapyup.config.ty.detect_project_layout", return_value=unknown_layout):
-                # This should fail because file is readonly and fallback can't write
-                with pytest.raises(PermissionError):
-                    ty_config_setup()
-
-    def test_toml_load_error(self, project_dir: Path) -> None:
-        """Test setup when pyproject.toml has invalid TOML."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("invalid toml [")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # With new approach, toml.TomlDecodeError will be raised directly
-            with pytest.raises(toml.TomlDecodeError):
-                ty_config_setup()
-
-
-class TestValidateTyConfig:
-    """Test validate_ty_config function."""
-
-    def test_valid_config(self, project_dir: Path) -> None:
-        """Test validation of valid config."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"tool": {"ty": {"environment": {"root": ["./src"]}}}}
-        pyproject_path.write_text(toml.dumps(config))
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            assert validate_ty_config() is True
-
-    def test_no_pyproject(self, project_dir: Path) -> None:
-        """Test validation when no pyproject.toml."""
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            assert validate_ty_config() is False
-
-    def test_no_ty_config(self, project_dir: Path) -> None:
-        """Test validation when no ty config."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"project": {"name": "test"}}
-        pyproject_path.write_text(toml.dumps(config))
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            assert validate_ty_config() is False
-
-    def test_invalid_ty_config(self, project_dir: Path) -> None:
-        """Test validation of invalid ty config."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"tool": {"ty": {}}}  # Missing environment section
-        pyproject_path.write_text(toml.dumps(config))
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            assert validate_ty_config() is False
-
-    def test_invalid_toml(self, project_dir: Path) -> None:
-        """Test validation with invalid TOML."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("invalid toml [")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # With new approach, toml.TomlDecodeError will be raised directly
-            with pytest.raises(toml.TomlDecodeError):
-                validate_ty_config()
-
-
-class TestGetTyConfigInfo:
-    """Test get_ty_config_info function."""
-
-    def test_get_existing_config(self, project_dir: Path) -> None:
-        """Test getting existing config info."""
-        pyproject_path = project_dir / "pyproject.toml"
-        ty_config = {"environment": {"root": ["./src"]}}
-        config = {"tool": {"ty": ty_config}}
-        pyproject_path.write_text(toml.dumps(config))
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = get_ty_config_info()
-            assert result == ty_config
-
-    def test_get_no_pyproject(self, project_dir: Path) -> None:
-        """Test getting config when no pyproject.toml."""
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = get_ty_config_info()
-            assert result is None
-
-    def test_get_no_ty_config(self, project_dir: Path) -> None:
-        """Test getting config when no ty config exists."""
-        pyproject_path = project_dir / "pyproject.toml"
-        config = {"project": {"name": "test"}}
-        pyproject_path.write_text(toml.dumps(config))
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            result = get_ty_config_info()
-            assert result is None
-
-    def test_get_invalid_toml(self, project_dir: Path) -> None:
-        """Test getting config with invalid TOML."""
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("invalid toml [")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # With new approach, toml.TomlDecodeError will be raised directly
-            with pytest.raises(toml.TomlDecodeError):
-                get_ty_config_info()
-
-
-class TestIntegration:
-    """Integration tests for the ty config module."""
-
-    def test_full_workflow_src_layout(self, project_dir: Path) -> None:
-        """Test full workflow with src layout."""
-        # Create project structure
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test-project'")
-
-        src_dir = project_dir / "src"
-        src_dir.mkdir()
-        (src_dir / "ultrapyup").mkdir()  # Use ultrapyup as package name to match layout detection
-        (src_dir / "ultrapyup" / "__init__.py").write_text("")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            with patch("ultrapyup.layout.Path", lambda x: project_dir / x if x != "." else project_dir):
-                # Setup config
-                result = ty_config_setup()
-                assert result.success is True
-                assert result.layout_detected is not None
-                assert result.layout_detected.layout == ProjectLayout.SRC_LAYOUT
-
-                # Validate config
-                assert validate_ty_config() is True
-
-                # Get config info
-                config_info = get_ty_config_info()
-                assert config_info is not None
-                assert "environment" in config_info
-
-    def test_full_workflow_fallback(self, project_dir: Path) -> None:
-        """Test full workflow with fallback configuration."""
-        # Create minimal project structure (will trigger fallback)
-        pyproject_path = project_dir / "pyproject.toml"
-        pyproject_path.write_text("[project]\nname = 'test-project'")
-
-        with patch("ultrapyup.config.ty.Path.cwd", return_value=project_dir):
-            # Mock detect_project_layout to return unknown layout (triggers fallback)
-            unknown_layout = LayoutDetection(
-                layout=ProjectLayout.UNKNOWN,
-                root_paths=["./"],
-                package_name=None,
-            )
-            with patch("ultrapyup.config.ty.detect_project_layout", return_value=unknown_layout):
-                # Setup config (should fallback)
-                result = ty_config_setup()
-                assert result.success is True
-                assert result.fallback_used is True
-
-                # Validate config
-                assert validate_ty_config() is True
-
-                # Get config info
-                config_info = get_ty_config_info()
-                assert config_info is not None
-                assert config_info["environment"]["root"] == ["./src"]
+        with open(pyproject_file) as f:
+            config = toml.load(f)
+        assert config["tool"]["ty"]["environment"]["root"] == ["./mypackage"]

@@ -5,6 +5,7 @@ from ultrapyup.editor import (
     get_editor_rules,
     get_editor_settings,
 )
+from ultrapyup.layout import detect_project_layout
 from ultrapyup.migrate import _check_python_project, _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import PackageManager, get_package_manager, install_dependencies
 from ultrapyup.precommit import PreCommitTool, get_precommit_tools
@@ -37,7 +38,7 @@ def initialize(
     # Configure user's experience
     install_dependencies(selected_package_manager, selected_pre_commit_tools)
     ruff_config_setup()
-    ty_config_setup()
+    ty_config_setup(detect_project_layout())
 
     if selected_pre_commit_tools:
         for tool in selected_pre_commit_tools:
