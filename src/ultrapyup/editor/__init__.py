@@ -6,55 +6,46 @@ from ultrapyup.editor.utils import (
     _vscode_compatible_settings,
     setting_options,
 )
-from ultrapyup.utils import log
+from ultrapyup.utils import log_info_only, log_selection
 
 
-def get_editors_rules(editor_rules: list[EditorRule] | None = None) -> list[EditorRule] | None:
-    """Get user-selected AI rules through interactive prompt or parameter.
-
-    Args:
-        editor_rules: List of editor rule values to enable (optional)
-
-    Returns:
-        List of selected EditorRule objects, or None if no rules were selected.
-    """
+def get_editor_rules(editor_rules: list[EditorRule] | None = None) -> list[EditorRule] | None:
+    """Get user-selected AI rules through interactive prompt or parameter."""
+    # Ask user for rules
     if editor_rules is None:
         rules = _editor_rules_ask()
-    elif len(editor_rules) > 0:
-        rules = editor_rules
-    else:  # Empty list, user explicitly wants no rules --editor-rules
-        rules = None
-
-    if not rules:
-        log.info("none")
-        return None
-    else:
-        log.info(", ".join(rule.value for rule in rules))
+        log_info_only(rules)
         return rules
 
+    # Handle explicit skip
+    if any(rule.value == "skip" for rule in editor_rules):
+        log_selection(None, "Selected AI rules")
+        return None
 
-def get_editors_settings(editor_settings: list[EditorSetting] | None = None) -> list[EditorSetting] | None:
-    """Get user-selected editor settings through interactive prompt or parameter.
+    # Handle explicit rules provided
+    log_selection(editor_rules, "Selected AI rules")
+    return editor_rules
 
-    Args:
-        editor_settings: List of editor setting values to configure (optional)
 
-    Returns:
-        List of selected EditorSetting objects, or None if no settings were selected.
-    """
+def get_editor_settings(
+    editor_settings: list[EditorSetting] | None = None,
+) -> list[EditorSetting] | None:
+    """Get user-selected editor settings through interactive prompt or parameter."""
+    # Ask user for settings
     if editor_settings is None:
         settings = _editor_settings_ask()
-    elif len(editor_settings) > 0:
-        settings = _vscode_compatible_settings(editor_settings)
-    else:  # Empty list, user explicitly wants no rules --editor-rules
-        settings = None
-
-    if not settings:
-        log.info("none")
-        return None
-    else:
-        log.info(", ".join(rule.value for rule in settings))
+        log_info_only(settings)
         return settings
+
+    # Handle explicit skip
+    if any(setting.value == "skip" for setting in editor_settings):
+        log_selection(None, "Selected editor settings")
+        return None
+
+    # Handle explicit settings provided
+    settings = _vscode_compatible_settings(editor_settings)
+    log_selection(settings, "Selected editor settings")
+    return settings
 
 
 __all__ = [

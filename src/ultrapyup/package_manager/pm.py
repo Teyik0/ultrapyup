@@ -11,6 +11,7 @@ class PackageManager(str, Enum):
     UV = "uv"
     POETRY = "poetry"
     PIP = "pip"
+    SKIP = "skip"
 
     @property
     def lockfile(self) -> str | None:

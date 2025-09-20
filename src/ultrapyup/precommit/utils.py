@@ -1,5 +1,5 @@
 from ultrapyup.precommit.tool import PreCommitTool
-from ultrapyup.utils import ask, log
+from ultrapyup.utils import ask, log_info_only, log_selection
 
 
 def _precommit_tools_ask() -> list[PreCommitTool] | None:
@@ -30,19 +30,17 @@ def get_precommit_tools(precommit_tools: list[PreCommitTool] | None = None) -> l
     Returns:
         List of selected PreCommitTool objects, or None if no tools were selected.
     """
+    # Ask user for tools
     if precommit_tools is None:
         tools = _precommit_tools_ask()
-    elif len(precommit_tools) > 0:
-        tools = precommit_tools
-    else:  # Empty list, user explicitly wants no rules --editor-rules
-        tools = None
-
-    if not tools:
-        log.info("none")
-        return None
-    else:
-        log.info(", ".join(tool.value for tool in tools))
+        log_info_only(tools)
         return tools
 
-    log.info(", ".join(tool.value for tool in tools))
-    return tools
+    # Handle explicit skip
+    if any(precommit_tool.value == "skip" for precommit_tool in precommit_tools):
+        log_selection(None, "Selected pre-commit tools")
+        return None
+
+    # Handle explicit tools provided
+    log_selection(precommit_tools, "Selected pre-commit tools")
+    return precommit_tools

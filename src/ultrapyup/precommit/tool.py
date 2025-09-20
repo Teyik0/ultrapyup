@@ -11,6 +11,7 @@ class PreCommitTool(str, Enum):
 
     LEFTHOOK = "lefthook"
     PRE_COMMIT = "pre-commit"
+    SKIP = "skip"
 
     @property
     def display_name(self) -> str:

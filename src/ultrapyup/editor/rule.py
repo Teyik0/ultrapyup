@@ -11,6 +11,7 @@ class EditorRule(str, Enum):
     WINDSURF_AI = "windsurf-ai"
     CLAUDE_MD = "claude-md"
     ZED_AI = "zed-ai"
+    SKIP = "skip"
 
     @property
     def display_name(self) -> str:

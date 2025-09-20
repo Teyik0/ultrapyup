@@ -26,6 +26,23 @@ class Logger:
 log = Logger()
 
 
+def log_selection(items: list | None, title: str) -> None:
+    """Helper to log selected items."""
+    log.title(title)
+    if items:
+        log.info(", ".join(item.value for item in items))
+    else:
+        log.info("none")
+
+
+def log_info_only(items: list | None) -> None:
+    """Helper to log selected items without title."""
+    if items:
+        log.info(", ".join(item.value for item in items))
+    else:
+        log.info("none")
+
+
 def file_exist(path: Path | str) -> bool:
     """Check if a file or directory exists at the given path."""
     if isinstance(path, str):

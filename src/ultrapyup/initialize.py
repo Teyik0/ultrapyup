@@ -1,8 +1,8 @@
 from ultrapyup.editor import (
     EditorRule,
     EditorSetting,
-    get_editors_rules,
-    get_editors_settings,
+    get_editor_rules,
+    get_editor_settings,
 )
 from ultrapyup.migrate import _check_python_project, _migrate_requirements_to_pyproject
 from ultrapyup.package_manager import PackageManager, get_package_manager
@@ -30,8 +30,8 @@ def initialize(
 
     _migrate_requirements_to_pyproject()
     selected_package_manager = get_package_manager(package_manager)
-    selected_editor_rules = get_editors_rules(editor_rules)
-    selected_editor_settings = get_editors_settings(editor_settings)
+    selected_editor_rules = get_editor_rules(editor_rules)
+    selected_editor_settings = get_editor_settings(editor_settings)
     selected_pre_commit_tools = get_precommit_tools(precommit_tools)
 
     # Configure user's experience

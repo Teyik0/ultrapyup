@@ -11,6 +11,7 @@ class EditorSetting(str, Enum):
     WINDSURF = "windsurf"
     KIRO = "kiro"
     ZED = "zed"
+    SKIP = "skip"
 
     @property
     def display_name(self) -> str:
