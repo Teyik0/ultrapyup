@@ -19,6 +19,7 @@ class PreCommitTool(str, Enum):
         display_name_map = {
             "lefthook": "Lefthook",
             "pre-commit": "Pre-commit",
+            "skip": "skip",
         }
         return display_name_map[self.value]
 

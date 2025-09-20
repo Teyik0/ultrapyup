@@ -20,6 +20,7 @@ class PackageManager(str, Enum):
             "uv": "uv.lock",
             "poetry": "poetry.lock",
             "pip": None,
+            "skip": None,
         }
         return lockfile_map[self.value]
 

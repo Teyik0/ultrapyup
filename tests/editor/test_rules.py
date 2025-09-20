@@ -53,7 +53,7 @@ class TestEditorRule:
     def test_editor_rule_iteration(self) -> None:
         """Test that we can iterate over all EditorRule values."""
         rules = list(EditorRule)
-        assert len(rules) == 5
+        assert len(rules) == 6
         assert EditorRule.GITHUB_COPILOT in rules
         assert EditorRule.CURSOR_AI in rules
         assert EditorRule.WINDSURF_AI in rules

@@ -42,7 +42,7 @@ class TestPreCommitTool:
     def test_precommit_tool_iteration(self) -> None:
         """Test that we can iterate over all PreCommitTool values."""
         tools = list(PreCommitTool)
-        assert len(tools) == 2
+        assert len(tools) == 3
         assert PreCommitTool.LEFTHOOK in tools
         assert PreCommitTool.PRE_COMMIT in tools
 

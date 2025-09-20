@@ -9,6 +9,12 @@ from ultrapyup.utils import log
 
 def get_package_manager(package_manager: PackageManager | None = None) -> PackageManager:
     """Detect or prompt for package manager selection based on lockfiles or user input."""
+    # Try auto-detection (works for both "skip" and None cases)
+    if detected_pm := _package_manager_auto_detect():
+        log.title("Package manager auto detected")
+        log.info(detected_pm.value)
+        return detected_pm
+
     # Ask user if not provided
     if package_manager is None:
         pm = _package_manager_ask()
@@ -20,12 +26,6 @@ def get_package_manager(package_manager: PackageManager | None = None) -> Packag
         log.title("Package manager selected")
         log.info(package_manager.value)
         return package_manager
-
-    # Try auto-detection (works for both "skip" and None cases)
-    if detected_pm := _package_manager_auto_detect():
-        log.title("Package manager auto detected")
-        log.info(detected_pm.value)
-        return detected_pm
 
     # Handle fallback cases
     raise RuntimeError("Unable to auto detect your package manager, specify one.")

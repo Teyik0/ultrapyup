@@ -22,6 +22,7 @@ class EditorSetting(str, Enum):
             "windsurf": "Windsurf",
             "kiro": "Kiro",
             "zed": "Zed",
+            "skip": "skip",
         }
         return display_name_map[self.value]
 
@@ -34,6 +35,7 @@ class EditorSetting(str, Enum):
             "windsurf": ".vscode",
             "kiro": ".vscode",
             "zed": ".zed",
+            "skip": "skip",
         }
         return settings_dir_map[self.value]
 

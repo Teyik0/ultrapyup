@@ -48,7 +48,7 @@ class TestEditorSetting:
     def test_editor_setting_iteration(self) -> None:
         """Test that we can iterate over all EditorSetting values."""
         settings = list(EditorSetting)
-        assert len(settings) == 5
+        assert len(settings) == 6
         assert EditorSetting.VSCODE in settings
         assert EditorSetting.CURSOR in settings
         assert EditorSetting.WINDSURF in settings

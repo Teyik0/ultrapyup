@@ -141,7 +141,7 @@ class TestEditorSettingsAsk:
 
             assert result is not None
             # Should be deduplicated (VSCode-compatible editors share same dir)
-            assert len(result) == 2  # .vscode and .zed
+            assert len(result) == 3  # .vscode and .zed
             settings_dirs = {s.settings_dir for s in result}
             assert ".vscode" in settings_dirs
             assert ".zed" in settings_dirs

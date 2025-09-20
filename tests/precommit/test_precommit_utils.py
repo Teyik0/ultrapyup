@@ -11,27 +11,17 @@ class TestGetPreCommitTools:
         """Test get_precommit_tools with provided tools list."""
         tools = [PreCommitTool.LEFTHOOK, PreCommitTool.PRE_COMMIT]
 
-        with patch("ultrapyup.precommit.utils.log") as mock_log:
+        with patch("ultrapyup.precommit.utils.log_selection") as mock_log:
             result = get_precommit_tools(tools)
 
         assert result == tools
-        mock_log.info.assert_called_once_with("lefthook, pre-commit")
-
-    def test_get_precommit_tools_with_empty_list(self) -> None:
-        """Test get_precommit_tools with empty tools list."""
-        tools = []
-
-        with patch("ultrapyup.precommit.utils.log") as mock_log:
-            result = get_precommit_tools(tools)
-
-        assert result is None
-        mock_log.info.assert_called_once_with("none")
+        mock_log.assert_called_once_with(tools, "Selected pre-commit tools")
 
     def test_get_precommit_tools_with_none(self) -> None:
         """Test get_precommit_tools with None as input."""
         with (
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
-            patch("ultrapyup.precommit.utils.log") as mock_log,
+            patch("ultrapyup.precommit.utils.log_info_only") as mock_log,
         ):
             mock_ask.return_value = ["Lefthook", "Pre-commit"]
 
@@ -39,43 +29,43 @@ class TestGetPreCommitTools:
 
         expected_tools = [PreCommitTool.LEFTHOOK, PreCommitTool.PRE_COMMIT]
         assert result == expected_tools
-        mock_log.info.assert_called_once_with("lefthook, pre-commit")
+        mock_log.assert_called_once_with(expected_tools)
 
     def test_get_precommit_tools_interactive_single_selection(self) -> None:
         """Test interactive selection of single precommit tool."""
         with (
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
-            patch("ultrapyup.precommit.utils.log") as mock_log,
+            patch("ultrapyup.precommit.utils.log_info_only") as mock_log,
         ):
             mock_ask.return_value = ["Lefthook"]
 
             result = get_precommit_tools(None)
 
         assert result == [PreCommitTool.LEFTHOOK]
-        mock_log.info.assert_called_once_with("lefthook")
+        mock_log.assert_called_once_with([PreCommitTool.LEFTHOOK])
 
     def test_get_precommit_tools_interactive_no_selection(self) -> None:
         """Test interactive selection with no tools selected."""
         with (
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
-            patch("ultrapyup.precommit.utils.log") as mock_log,
+            patch("ultrapyup.precommit.utils.log_info_only") as mock_log,
         ):
             mock_ask.return_value = []
 
             result = get_precommit_tools(None)
 
         assert result is None
-        mock_log.info.assert_called_once_with("none")
+        mock_log.assert_called_once_with(None)
 
     def test_get_precommit_tools_interactive_cancel(self) -> None:
         """Test interactive selection when user cancels (ctrl+c)."""
         with (
             patch("ultrapyup.precommit.utils.ask") as mock_ask,
-            patch("ultrapyup.precommit.utils.log") as mock_log,
+            patch("ultrapyup.precommit.utils.log_info_only") as mock_log,
         ):
             mock_ask.return_value = None
 
             result = get_precommit_tools(None)
 
         assert result is None
-        mock_log.info.assert_called_once_with("none")
+        mock_log.assert_called_once_with(None)

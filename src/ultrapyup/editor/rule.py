@@ -22,6 +22,7 @@ class EditorRule(str, Enum):
             "windsurf-ai": "Windsurf AI",
             "claude-md": "Claude (CLAUDE.md)",
             "zed-ai": "Zed AI",
+            "skip": "skip",
         }
         return display_name_map[self.value]
 
