@@ -1,6 +1,8 @@
-import shutil
 from enum import Enum
 from pathlib import Path
+
+from ultrapyup.ai_rules import get_rules_file
+from ultrapyup.package_manager import PackageManager
 
 
 class EditorRule(str, Enum):
@@ -38,19 +40,9 @@ class EditorRule(str, Enum):
         }
         return target_file_map[self.value]
 
-    @property
-    def source_file(self) -> str:
-        """Get the source file for this editor rule."""
-        return ".rules"  # All use the same source file
-
-    def setup(self) -> None:
+    def setup(self, package_manager: PackageManager) -> None:
         """Set up AI rule files by copying and renaming them."""
-        current_file = Path(__file__)
-        source_file = current_file.parent.parent / "resources" / self.source_file
+        rule_content = get_rules_file(package_manager)
         target_path = Path.cwd() / self.target_file
         target_path.parent.mkdir(parents=True, exist_ok=True)
-
-        if source_file.is_file():
-            shutil.copy2(source_file, target_path)
-        else:
-            raise FileNotFoundError(f"Source file {source_file} not found")
+        target_path.write_text(rule_content)

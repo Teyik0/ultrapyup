@@ -33,7 +33,7 @@ def change_directory(path: Path) -> Generator[Path, None, None]:
 
 @app.command("init", help="Initialize Ultrapyup in the current directory")
 def init_command(
-    path: Annotated[Path, typer.Argument(help="Directory to initialize (defaults to current directory")] = Path("."),
+    path: Annotated[Path, typer.Argument(help="Directory to initialize (defaults to current directory)")] = Path("."),
     package_manager: Annotated[
         PackageManager | None,
         typer.Option(

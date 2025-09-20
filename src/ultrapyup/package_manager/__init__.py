@@ -2,6 +2,7 @@ from ultrapyup.package_manager.pm import PackageManager
 from ultrapyup.package_manager.utils import (
     _package_manager_ask,
     _package_manager_auto_detect,
+    install_dependencies,
     options,
 )
 from ultrapyup.utils import log
@@ -33,4 +34,4 @@ def get_package_manager(package_manager: PackageManager | None = None) -> Packag
     raise RuntimeError("Unable to auto detect your package manager, specify one.")
 
 
-__all__ = ["PackageManager", "options"]
+__all__ = ["PackageManager", "install_dependencies", "options"]

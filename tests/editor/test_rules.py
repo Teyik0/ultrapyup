@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from ultrapyup.editor.rule import EditorRule
+from ultrapyup.package_manager import PackageManager
 
 
 class TestEditorRule:
@@ -38,12 +39,6 @@ class TestEditorRule:
         assert EditorRule.CLAUDE_MD.target_file == "CLAUDE.md"
         assert EditorRule.ZED_AI.target_file == ".rules"
 
-    def test_editor_rule_source_file_property(self) -> None:
-        """Test source_file property for each editor rule."""
-        # All rules use the same source file
-        for rule in EditorRule:
-            assert rule.source_file == ".rules"
-
     def test_editor_rule_comparison(self) -> None:
         """Test EditorRule comparison with strings."""
         assert EditorRule.GITHUB_COPILOT == "github-copilot"
@@ -67,7 +62,7 @@ class TestEditorRuleSetup:
     def test_setup_github_copilot_success(self, project_dir: Path) -> None:
         """Test successful setup of GitHub Copilot rule."""
         rule = EditorRule.GITHUB_COPILOT
-        rule.setup()
+        rule.setup(PackageManager.UV)
         github_dir = project_dir / ".github"
         target_file = github_dir / "copilot-instructions.md"
         assert github_dir.is_dir()
@@ -76,28 +71,28 @@ class TestEditorRuleSetup:
     def test_setup_cursor_ai_success(self, project_dir: Path) -> None:
         """Test successful setup of Cursor AI rule."""
         rule = EditorRule.CURSOR_AI
-        rule.setup()
+        rule.setup(PackageManager.UV)
         target_file = project_dir / ".cursorrules"
         assert target_file.is_file()
 
     def test_setup_windsurf_ai_success(self, project_dir: Path) -> None:
         """Test successful setup of Windsurf AI rule."""
         rule = EditorRule.WINDSURF_AI
-        rule.setup()
+        rule.setup(PackageManager.UV)
         target_file = project_dir / ".windsurfrules"
         assert target_file.is_file()
 
     def test_setup_claude_md_success(self, project_dir: Path) -> None:
         """Test successful setup of Claude MD rule."""
         rule = EditorRule.CLAUDE_MD
-        rule.setup()
+        rule.setup(PackageManager.UV)
         target_file = project_dir / "CLAUDE.md"
         assert target_file.is_file()
 
     def test_setup_zed_ai_success(self, project_dir: Path) -> None:
         """Test successful setup of Zed AI rule."""
         rule = EditorRule.ZED_AI
-        rule.setup()
+        rule.setup(PackageManager.UV)
         target_file = project_dir / ".rules"
         assert target_file.is_file()
 
@@ -109,6 +104,6 @@ class TestEditorRuleSetup:
         assert existing_rule.is_file()
 
         rule = EditorRule.CURSOR_AI
-        rule.setup()
+        rule.setup(PackageManager.UV)
         # Verify file was overwritten with new content
         assert existing_rule.read_text() != existing_rules_content

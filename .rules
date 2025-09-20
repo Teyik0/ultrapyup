@@ -1,173 +1,68 @@
-# Python Package Management with uv
+# Ultrapyup Development Guide
 
-Use uv exclusively for Python package management in this project.
+## Project Overview
 
-## Package Management Commands
+Ultrapyup is a zero-config Python toolset that provides AI-ready formatting, linting, and type checking for Python projects. It wraps Ruff and Ty with sensible defaults and extends them with AI/IDE integration capabilities.
 
-- All Python dependencies **must be installed, synchronized, and locked** using uv
-- Never use pip, pip-tools, poetry, or conda directly for dependency management
+**Key Features:**
+- Lightning-fast formatting and linting (built on Rust-based Ruff)
+- Zero-config setup with `uvx ultrapyup`
+- 273+ strict linting rules for type safety and code quality
+- AI/IDE integration for consistent code generation
+- uv-first package management approach
 
-Use these commands:
+## Architecture
 
-- Install dependencies: `uv add <package>`
-- Remove dependencies: `uv remove <package>`
-- Sync dependencies: `uv sync`
+### Core Components
 
-## Running Python Code
+1. **CLI (`src/ultrapyup/__init__.py`)**
+   - Entry point for the `ultrapyup` command
+   - Built with modern Python CLI library Typer
 
-- Run a Python script with `uv run <script-name>.py`
-- Run Python tools like Pytest with `uv run pytest` or `uv run ruff`
-- Launch a Python repl with `uv run python`
+2. **Ruff Configuration (`ruff.toml`)**
+   - The heart of Ultrapyup
+   - Comprehensive rule set covering security, type safety, performance, style, and maintainability
+   - Formatting settings: 4 spaces, 120-char width, double quotes
 
-## Managing Scripts with PEP 723 Inline Metadata
+3. **AI/IDE Rules (`src/ultrapyup/ai_rules.py`, check for it)**
+   - 273+ rules that guide AI assistants in Python code generation
+   - Shared across all IDE integrations
+   - Focus on modern Python best practices and security
 
-- Run a Python script with inline metadata (dependencies defined at the top of the file) with: `uv run script.py`
-- You can add or remove dependencies manually from the `dependencies =` section at the top of the script, or
-- Or using uv CLI:
-    - `uv add package-name --script script.py`
-    - `uv remove package-name --script script.py`
+## Development Workflow
 
-# Development Guidelines
+### Setup
+```bash
+uv sync --all-groups
+```
 
-This document contains critical information about working with this codebase. Follow these guidelines precisely.
+### Testing
+```bash
+uvx pytest -n auto -s tests --cov --cov-report=xml --cov-report=term
+```
 
-## Core Development Rules
+### Linting and Formatting
+```bash
+uvx ruff check .           # Check for issues
+uvx ruff check . --fix     # Fix issues automatically
+uvx ruff format .          # Format code
+uvx ty check .             # Type checking
+```
 
-1. Package Management
-   - ONLY use uv, NEVER pip
-   - Installation: `uv add package`
-   - Running tools: `uv run tool`
-   - Upgrading: `uv add --dev package --upgrade-package package`
-   - FORBIDDEN: `uv pip install`, `@latest` syntax
+### Building
+```bash
+uv build                   # Build the package
+```
 
-2. Code Quality
-   - Type hints required for all code
-   - Public APIs must have docstrings
-   - Functions must be focused and small
-   - Follow existing patterns exactly
-   - Line length: 88 chars maximum
+## Notes for AI Assistants
 
-3. Testing Requirements
-   - Framework: `uv run pytest`
-   - Async testing: use anyio, not asyncio
-   - Coverage: test edge cases and errors
-   - Avoid use of patch and mocking, prefer use tempdir to create any necessary input file
-   - New features require tests
-   - Bug fixes require regression tests
+1. **Always run tests** after making changes to ensure nothing breaks
+2. **Follow existing patterns** - consistency is key in this codebase
+3. **The rules in `src/ultrapyup/ai_rules.py`** are the source of truth for AI/IDE integrations
+4. **Ruff configuration** should only be modified with careful consideration of downstream impacts
+5. **When adding features**, update both the code and relevant tests
+6. **Use uv exclusively** for package management - never pip directly
+7. **Type hints are required** for all code
+8. **Use Pydantic for data validation** instead of dataclasses
 
-4. Data Validation Requirements
-   - Use pydantic for data Validation
-   - Prefer pydantic over @dataclass
-
-5. Code Style
-    - PEP 8 naming (snake_case for functions/variables)
-    - Class names in PascalCase
-    - Constants in UPPER_SNAKE_CASE
-    - Document with docstrings
-    - Use f-strings for formatting
-
-- For commits fixing bugs or adding features based on user reports add:
-  ```bash
-  git commit --trailer "Reported-by:<name>"
-  ```
-  Where `<name>` is the name of the user.
-
-- For commits related to a Github issue, add
-  ```bash
-  git commit --trailer "Github-Issue:#<number>"
-  ```
-- NEVER ever mention a `co-authored-by` or similar aspects. In particular, never
-  mention the tool used to create the commit message or PR.
-
-## Development Philosophy
-
-- **Simplicity**: Write simple, straightforward code
-- **Readability**: Make code easy to understand
-- **Performance**: Consider performance without sacrificing readability
-- **Maintainability**: Write code that's easy to update
-- **Testability**: Ensure code is testable
-- **Reusability**: Create reusable components and functions
-- **Less Code = Less Debt**: Minimize code footprint
-
-## Coding Best Practices
-
-- **Early Returns**: Use to avoid nested conditions
-- **Descriptive Names**: Use clear variable/function names (prefix handlers with "handle")
-- **Constants Over Functions**: Use constants where possible
-- **DRY Code**: Don't repeat yourself
-- **Functional Style**: Prefer functional, immutable approaches when not verbose
-- **Don't use try catch**: Never use try catch, instead use if else statements and raise error when needed
-- **Minimal Changes**: Only modify code related to the task at hand
-- **Function Ordering**: Define composing functions before their components
-- **TODO Comments**: Mark issues in existing code with "TODO:" prefix
-- **Simplicity**: Prioritize simplicity and readability over clever solutions
-- **Build Iteratively** Start with minimal functionality and verify it works before adding complexity
-- **Run Tests**: Test your code frequently with realistic inputs and validate outputs
-- **Build Test Environments**: Create testing environments for components that are difficult to validate directly
-- **Functional Code**: Use functional and stateless approaches where they improve clarity
-- **Clean logic**: Keep core logic clean and push implementation details to the edges
-- **File Organization**: Balance file organization with simplicity - use an appropriate number of files for the project scale
-
-## Python Tools
-
-## Code Formatting
-
-1. Ruff
-   - Format: `uv run ruff format .`
-   - Check: `uv run ruff check .`
-   - Fix: `uv run ruff check . --fix`
-   - Critical issues:
-     - Line length (88 chars)
-     - Import sorting (I001)
-     - Unused imports
-   - Line wrapping:
-     - Strings: use parentheses
-     - Function calls: multi-line with proper indent
-     - Imports: split into multiple lines
-
-2. Type Checking
-   - Tool: `uv run ty`
-   - Requirements:
-     - Explicit None checks for Optional
-     - Type narrowing for strings
-     - Version warnings can be ignored if checks pass
-
-3. Pre-commit
-   - Config: `lefthook.yml`
-   - Runs: on git commit
-   - Tools: Prettier (YAML/JSON), Ruff (Python)
-   - Ruff updates:
-     - Check PyPI versions
-     - Update config rev
-     - Commit config first
-
-## Error Resolution
-
-1. CI Failures
-   - Fix order:
-     1. Formatting
-     2. Type errors
-     3. Linting
-   - Type errors:
-     - Get full line context
-     - Check Optional types
-     - Add type narrowing
-     - Verify function signatures
-
-2. Common Issues
-   - Line length:
-     - Break strings with parentheses
-     - Multi-line function calls
-     - Split imports
-   - Types:
-     - Add None checks
-     - Narrow string types
-     - Match existing patterns
-
-3. Best Practices
-   - Check git status before commits
-   - Run formatters before type checks
-   - Keep changes minimal
-   - Follow existing patterns
-   - Document public APIs
-   - Test thoroughly
+Remember: Ultrapyup is a developer productivity tool focused on code quality and security. Every change should make Python development faster, safer, and more maintainable while following modern best practices.

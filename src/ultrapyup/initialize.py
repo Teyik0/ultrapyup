@@ -1,3 +1,4 @@
+from ultrapyup.config import ruff_config_setup, ty_config_setup
 from ultrapyup.editor import (
     EditorRule,
     EditorSetting,
@@ -5,8 +6,7 @@ from ultrapyup.editor import (
     get_editor_settings,
 )
 from ultrapyup.migrate import _check_python_project, _migrate_requirements_to_pyproject
-from ultrapyup.package_manager import PackageManager, get_package_manager
-from ultrapyup.pm import install_dependencies, ruff_config_setup, ty_config_setup
+from ultrapyup.package_manager import PackageManager, get_package_manager, install_dependencies
 from ultrapyup.precommit import PreCommitTool, get_precommit_tools
 from ultrapyup.utils import log
 
@@ -47,7 +47,7 @@ def initialize(
 
     if selected_editor_rules:
         for rule in selected_editor_rules:
-            rule.setup()
+            rule.setup(selected_package_manager)
         log.title("AI rules setup completed")
         log.info(f"{', '.join(rule.target_file for rule in selected_editor_rules)} created")
 
