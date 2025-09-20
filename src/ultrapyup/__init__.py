@@ -1,3 +1,7 @@
+import os
+from collections.abc import Generator
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -16,8 +20,20 @@ app = typer.Typer(
 )
 
 
+@contextmanager
+def change_directory(path: Path) -> Generator[Path, None, None]:
+    """Context manager to temporarily change directory."""
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(path)
+        yield path
+    finally:
+        os.chdir(original_cwd)
+
+
 @app.command("init", help="Initialize Ultrapyup in the current directory")
 def init_command(
+    path: Annotated[Path, typer.Argument(help="Directory to initialize (defaults to current directory")] = Path("."),
     package_manager: Annotated[
         PackageManager | None,
         typer.Option(
@@ -52,12 +68,24 @@ def init_command(
     ] = None,
 ) -> None:
     """Initialize Ultrapyup in the current directory."""
+    target_path = path.resolve()
+
+    if not target_path.exists():
+        log.error(f"Directory does not exist: {target_path}")
+        raise typer.Exit(1)
+
+    if not target_path.is_dir():
+        log.error(f"Path is not a directory: {target_path}")
+        raise typer.Exit(1)
+
     try:
-        initialize(
-            package_manager=package_manager,
-            editor_rules=editor_rules,
-            editor_settings=editor_settings,
-            precommit_tools=precommit_tools,
-        )
+        with change_directory(target_path):
+            initialize(
+                package_manager=package_manager,
+                editor_rules=editor_rules,
+                editor_settings=editor_settings,
+                precommit_tools=precommit_tools,
+            )
     except Exception as e:
         log.error(f"Initialization failed: {e}")
+        raise typer.Exit(1) from e

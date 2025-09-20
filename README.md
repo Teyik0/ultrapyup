@@ -20,7 +20,7 @@ Heavily inspired by [Ultracite](https://github.com/haydenbleasel/ultracite), but
 Install and initialize Ultrapyup in your project:
 
 ```sh
-uvx ultrapyup init
+uvx ultrapyup
 ```
 
 That's it! Ultrapyup will automatically detect your project structure and set up modern Python tooling with best practices. No configuration required.
