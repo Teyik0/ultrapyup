@@ -51,13 +51,14 @@ class TestEditorRulesAsk:
     def test_editor_rules_ask_all_rules_success(self) -> None:
         """Test user prompt for all editor rules selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value = [rule.display_name for rule in EditorRule]
+            mock_inquirer.return_value = [rule.display_name for rule in EditorRule if rule != EditorRule.SKIP]
             result = _editor_rules_ask()
 
             assert result is not None
-            assert len(result) == len(EditorRule)
+            assert len(result) == len(EditorRule) - 1  # Exclude SKIP
             for rule in EditorRule:
-                assert rule in result
+                if rule != EditorRule.SKIP:
+                    assert rule in result
 
     def test_editor_rules_ask_empty_selection(self) -> None:
         """Test user prompt with empty selection (skip)."""
@@ -136,12 +137,14 @@ class TestEditorSettingsAsk:
     def test_editor_settings_ask_all_settings_success(self) -> None:
         """Test user prompt for all editor settings selection."""
         with patch("ultrapyup.editor.utils.ask") as mock_inquirer:
-            mock_inquirer.return_value = [setting.display_name for setting in EditorSetting]
+            mock_inquirer.return_value = [
+                setting.display_name for setting in EditorSetting if setting != EditorSetting.SKIP
+            ]
             result = _editor_settings_ask()
 
             assert result is not None
             # Should be deduplicated (VSCode-compatible editors share same dir)
-            assert len(result) == 3  # .vscode and .zed
+            assert len(result) == 2  # .vscode and .zed
             settings_dirs = {s.settings_dir for s in result}
             assert ".vscode" in settings_dirs
             assert ".zed" in settings_dirs
