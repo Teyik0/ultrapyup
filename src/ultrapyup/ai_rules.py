@@ -324,11 +324,10 @@ def get_rules_file(package_manager: PackageManager) -> str:
 
 
 # Template for rules file content
-_rules_template = """
-# Python AI Coding Rules and Best Practices
+_rules_template = """# Python AI Coding Rules and Best Practices
 
 This document enforces strict code quality, security standards, and modern Python best practices
-using Ruff's and Ty lightning-fast linter, formatter and type checker.
+using Ruff's and Ty's lightning-fast linter, formatter and type checker.
 
 ## Key Principles
 - Zero tolerance for security vulnerabilities

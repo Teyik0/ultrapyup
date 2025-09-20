@@ -75,10 +75,9 @@ def ty_config_setup(layout: LayoutDetection) -> None:
         if overwrite == "no":
             log.info("Keeping existing configuration")
             return None
-
-    _create_ty_config(layout)
-    log.title("Ty configuration setup completed")
-    if ty_conf_exist:
+        _create_ty_config(layout)
         log.info("ty configuration updated in pyproject.toml")
     else:
+        _create_ty_config(layout)
+        log.title("Ty configuration setup completed")
         log.info("ty configuration added to pyproject.toml")
