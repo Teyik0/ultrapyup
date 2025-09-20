@@ -245,7 +245,7 @@ antipattern_rules = [
     "Don't optimize before understanding the performance characteristics.",
     "Don't ignore the golden rule: assert positive AND negative space when testing.",
     "Don't use while loop",
-    "Don't use try except block at all.",
+    "Don't use try except block at all - raise exceptions to crash the program fast instead.",
 ]
 
 common_commands = {
