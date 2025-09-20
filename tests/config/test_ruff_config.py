@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import toml
@@ -7,9 +8,13 @@ from _pytest.capture import CaptureResult
 from ultrapyup.config.ruff import _create_ruff_config, _ruff_conf_exist, ruff_config_setup
 
 
-def _assert_ruff_conf_already_exist(captured: CaptureResult[str]) -> None:
-    assert "Ruff configuration setup skipped" in captured.out
-    assert "Ruff configuration already exists, skipping" in captured.out
+def _assert_ruff_conf_already_exist_overwrite_no(captured: CaptureResult[str]) -> None:
+    assert "Keeping existing configuration" in captured.out
+
+
+def _assert_ruff_conf_already_exist_overwrite_yes(captured: CaptureResult[str]) -> None:
+    assert "Ruff configuration setup completed" in captured.out
+    assert "ruff configuration updated" in captured.out
 
 
 def _assert_ruff_conf_complete(captured: CaptureResult[str]) -> None:
@@ -133,11 +138,13 @@ class TestRuffConfigSetup:
         ruff_file = Path.cwd() / "ruff.toml"
         ruff_file.write_text("line-length = 88")
 
-        result = ruff_config_setup()
+        with patch("ultrapyup.config.ruff.ask") as mock_inquirer:
+            mock_inquirer.return_value = "no"  # Simulate user choosing not to overwrite
+            result = ruff_config_setup()
 
-        assert result is None
-        assert ruff_file.read_text() != ruff_toml_resource_file.read_text()
-        _assert_ruff_conf_already_exist(capsys.readouterr())
+            assert result is None
+            assert ruff_file.read_text() != ruff_toml_resource_file.read_text()
+            _assert_ruff_conf_already_exist_overwrite_no(capsys.readouterr())
 
     def test_ruff_config_setup_when_pyproject_config_exists(
         self,
@@ -150,12 +157,18 @@ class TestRuffConfigSetup:
         config = {"tool": {"ruff": {"line-length": 100, "target-version": "py310"}}}
         with open(pyproject_file, "w") as f:
             toml.dump(config, f)
+        original_toml = pyproject_file.read_text()
 
-        result = ruff_config_setup()
+        with patch("ultrapyup.config.ruff.ask") as mock_inquirer:
+            mock_inquirer.return_value = "no"  # Simulate user choosing not to overwrite
+            result = ruff_config_setup()
 
-        assert result is None
-        assert not (Path.cwd() / "ruff.toml").exists()
-        _assert_ruff_conf_already_exist(capsys.readouterr())
+            assert result is None
+            assert not (Path.cwd() / "ruff.toml").exists()
+            _assert_ruff_conf_already_exist_overwrite_no(capsys.readouterr())
+
+        # No change should be made to pyproject.toml
+        assert pyproject_file.read_text() == original_toml
 
     def test_ruff_config_setup_when_no_config_exists(
         self,
@@ -182,32 +195,66 @@ class TestRuffConfigSetup:
         original_content = "line-length = 88\nexisting = true"
         ruff_file.write_text(original_content)
 
-        ruff_config_setup()
+        with patch("ultrapyup.config.ruff.ask") as mock_inquirer:
+            mock_inquirer.return_value = "no"  # Simulate user choosing not to overwrite
+            ruff_config_setup()
 
-        # Verify config was not changed
-        assert ruff_file.exists()
-        content = ruff_file.read_text()
-        assert content == original_content
-        assert content != ruff_toml_resource_file.read_text()
-        _assert_ruff_conf_already_exist(capsys.readouterr())
+            # Verify config was not changed
+            assert ruff_file.exists()
+            content = ruff_file.read_text()
+            assert content == original_content
+            assert content != ruff_toml_resource_file.read_text()
+            _assert_ruff_conf_already_exist_overwrite_no(capsys.readouterr())
 
+    def test_ruff_config_setup_overwrites_existing_config(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test that ruff_config_setup overwrites existing configuration when user agrees."""
+        # Create existing ruff.toml with specific content
+        ruff_file = Path.cwd() / "ruff.toml"
+        original_content = "line-length = 88\nexisting = true"
+        ruff_file.write_text(original_content)
 
-class TestRuffConfigEdgeCases:
-    """Tests for edge cases and error conditions."""
+        with patch("ultrapyup.config.ruff.ask") as mock_inquirer:
+            mock_inquirer.return_value = "yes"  # Simulate user choosing to overwrite
+            ruff_config_setup()
 
-    def test_concurrent_ruff_config_setup(self, project_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:  # noqa: ARG002
-        """Test that multiple consecutive setups work correctly."""
-        # First call should create the config
-        ruff_file, _ = _clean_ruff_conf()
-        result = ruff_config_setup()
-        assert result is None
-        assert ruff_file.exists()
-        assert ruff_file.read_text() == ruff_toml_resource_file.read_text()
-        _assert_ruff_conf_complete(capsys.readouterr())
+            # Verify config was updated
+            assert ruff_file.exists()
+            content = ruff_file.read_text()
+            assert content == ruff_toml_resource_file.read_text()
+            assert content != original_content
+            _assert_ruff_conf_already_exist_overwrite_yes(capsys.readouterr())
 
-        # Second call should skip (config now exists)
-        ruff_config_setup()
-        assert result is None
-        assert ruff_file.exists()
-        assert ruff_file.read_text() == ruff_toml_resource_file.read_text()
-        _assert_ruff_conf_already_exist(capsys.readouterr())
+    def test_ruff_config_setup_removes_pyproject_ruff_config(
+        self,
+        project_dir: Path,  # noqa: ARG002
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test that ruff_config_setup removes ruff config from pyproject.toml when creating ruff.toml."""
+        # Create pyproject.toml with ruff config
+        pyproject_file = Path.cwd() / "pyproject.toml"
+        config = {"tool": {"ruff": {"line-length": 100, "target-version": "py310"}, "black": {"line-length": 88}}}
+        with open(pyproject_file, "w") as f:
+            toml.dump(config, f)
+
+        with patch("ultrapyup.config.ruff.ask") as mock_inquirer:
+            mock_inquirer.return_value = "yes"  # Simulate user choosing to overwrite
+            ruff_config_setup()
+
+            # Verify ruff.toml was created
+            ruff_file = Path.cwd() / "ruff.toml"
+            assert ruff_file.exists()
+            assert ruff_file.read_text() == ruff_toml_resource_file.read_text()
+
+            # Verify ruff config was removed from pyproject.toml but black config remains
+            with open(pyproject_file) as f:
+                updated_config = toml.load(f)
+                assert "tool" in updated_config
+                assert "ruff" not in updated_config["tool"]
+                assert "black" in updated_config["tool"]
+                assert updated_config["tool"]["black"]["line-length"] == 88
+
+            _assert_ruff_conf_already_exist_overwrite_yes(capsys.readouterr())
