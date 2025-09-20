@@ -23,21 +23,8 @@ ultrapyup = "ultrapyup:app"
 Homepage = "https://github.com/teyik0/ultrapyup"
 Repository = "https://github.com/teyik0/ultrapyup"
 
-[tool.ruff]
-extend = ".venv/lib/python3.14/site-packages/ultrapyup/resources/ruff_base.toml"
-
 [tool.ty.environment]
 root = [ "./src",]
-
-[tool.ty.src]
-include = [ "src", "tests",]
-exclude = [ "tests/fixtures/**", "src/**/generated/**", "**/__pycache__", "**/*.pyc",]
-
-[tool.ty.rules]
-possibly-unresolved-reference = "warn"
-unused-ignore-comment = "warn"
-possibly-unbound-attribute = "error"
-division-by-zero = "error"
 
 [tool.pytest.ini_options]
 testpaths = [ "tests",]

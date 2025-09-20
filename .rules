@@ -63,6 +63,6 @@ uv build                   # Build the package
 5. **When adding features**, update both the code and relevant tests
 6. **Use uv exclusively** for package management - never pip directly
 7. **Type hints are required** for all code
-8. **Use Pydantic for data validation** instead of dataclasses
+8. **When testing use existing fixture in conftest.py and don't rely on mock and patch unless absolutely necessary**
 
 Remember: Ultrapyup is a developer productivity tool focused on code quality and security. Every change should make Python development faster, safer, and more maintainable while following modern best practices.

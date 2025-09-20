@@ -30,7 +30,7 @@ def _package_manager_auto_detect() -> PackageManager | None:
 
 def install_dependencies(package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None) -> None:
     """Install development dependencies using the specified package manager."""
-    dev_deps = ["ruff", "ty", "ultrapyup"]
+    dev_deps = ["ruff", "ty"]
     if pre_commit_tools:
         dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
 
@@ -39,7 +39,7 @@ def install_dependencies(package_manager: PackageManager, pre_commit_tools: list
 
         log.title("Dependencies installed")
         log.info(
-            f"ruff, ty, ultrapyup{', ' if pre_commit_tools else ''}{
+            f"ruff, ty{', ' if pre_commit_tools else ''}{
                 ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools) if pre_commit_tools else ''
             }"
         )

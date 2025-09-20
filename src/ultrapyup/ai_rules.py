@@ -163,6 +163,7 @@ testing_rules = [
 documentation_rules = [
     "Don't write module-level docstrings explaining the module's purpose.",
     "Document all public classes, methods, and functions.",
+    "Private/protected functions starting with _ don't need docstrings unless complex.",
     "Use Google-style docstrings with Args, Returns, and Raises sections.",
     "Include examples in docstrings for complex functions.",
     "Keep docstrings up to date with code changes.",

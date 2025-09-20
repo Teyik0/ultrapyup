@@ -40,6 +40,7 @@ class TestInitialize:
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "ruff, ty, ultrapyup" in captured.out  # Dependencies list
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
+            assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert result is None
 
             pyproject_path = python_empty_project / "pyproject.toml"
@@ -63,6 +64,7 @@ class TestInitialize:
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "lefthook" in captured.out  # Precommit tool in dependencies and logs
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
+            assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
             assert "lefthook.yaml created" in captured.out  # Precommit file created
             assert result is None
@@ -79,6 +81,7 @@ class TestInitialize:
 
             assert (python_uv_project / "lefthook.yaml").exists()
             assert not (python_uv_project / ".pre-commit-config.yaml").exists()
+            assert (python_uv_project / "ruff.toml").exists()
 
     def test_initialize_with_editors(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with editors selected."""
@@ -90,6 +93,7 @@ class TestInitialize:
             assert "uv" in captured.out  # Package manager auto-detected
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
+            assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert "AI rules setup completed" in captured.out  # From editor rule setup
             assert "Editor settings setup completed" in captured.out  # From editor settings setup
             assert ".rules created" in captured.out  # AI rule files created
@@ -108,6 +112,7 @@ class TestInitialize:
             assert (python_uv_project / ".rules").exists()
             assert (python_uv_project / ".zed").exists()
             assert not (python_uv_project / ".vscode/settings.json").exists()
+            assert (python_uv_project / "ruff.toml").exists()
 
     def test_initialize_full_flow_with_pip(self, python_pip_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
@@ -132,6 +137,7 @@ class TestInitialize:
             assert "Dependencies installed" in captured.out  # From install_dependencies
             assert "pre-commit" in captured.out  # Precommit tool in dependencies
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
+            assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
             assert ".pre-commit-config.yaml created" in captured.out  # Precommit file created
             assert "AI rules setup completed" in captured.out  # From editor rule setup
@@ -155,6 +161,7 @@ class TestInitialize:
             assert (python_pip_project / ".rules").exists()
             assert (python_pip_project / ".zed").exists()
             assert not (python_pip_project / ".vscode/settings.json").exists()
+            assert (python_pip_project / "ruff.toml").exists()
 
     def test_initialize_full_flow_with_uv(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test complete initialization flow with all options."""
@@ -173,6 +180,7 @@ class TestInitialize:
             assert "Dependencies installed" in captured.out
             assert "pre-commit" in captured.out
             assert "Ruff configuration setup completed" in captured.out
+            assert "ruff.toml created" in captured.out
             assert "Pre-commit setup completed" in captured.out
             assert ".pre-commit-config.yaml created" in captured.out
             assert "AI rules setup completed" in captured.out
@@ -196,6 +204,7 @@ class TestInitialize:
             assert (python_uv_project / ".github/copilot-instructions.md").exists()
             assert not (python_uv_project / ".zed").exists()
             assert (python_uv_project / ".vscode").exists()
+            assert (python_uv_project / "ruff.toml").exists()
 
     def test_initialize_with_cli_parameters(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with CLI parameters (non-interactive mode)."""
@@ -224,6 +233,7 @@ class TestInitialize:
         assert (python_uv_project / ".cursorrules").exists()
         assert (python_uv_project / ".rules").exists()
         assert (python_uv_project / ".vscode").exists()
+        assert (python_uv_project / "ruff.toml").exists()
 
     def test_initialize_with_empty_cli_parameters(
         self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]
@@ -236,6 +246,8 @@ class TestInitialize:
         assert "none" in captured.out  # Should appear 3 times for empty lists
         assert "Dependencies installed" in captured.out
         assert "ruff, ty, ultrapyup" in captured.out  # Only core dependencies
+        assert "Ruff configuration setup completed" in captured.out
+        assert "ruff.toml created" in captured.out
         assert "Pre-commit setup completed" not in captured.out
         assert "AI rules setup completed" not in captured.out
         assert "Editor settings setup completed" not in captured.out
@@ -245,3 +257,5 @@ class TestInitialize:
         assert not (python_uv_project / "lefthook.yaml").exists()
         assert not (python_uv_project / ".cursorrules").exists()
         assert not (python_uv_project / ".vscode").exists()
+        # But ruff.toml should always be created
+        assert (python_uv_project / "ruff.toml").exists()
