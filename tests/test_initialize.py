@@ -38,7 +38,7 @@ class TestInitialize:
             captured = capsys.readouterr()
             assert "uv" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
-            assert "ruff, ty, ultrapyup" in captured.out  # Dependencies list
+            assert "ruff, ty" in captured.out  # Dependencies list
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert result is None
@@ -50,7 +50,6 @@ class TestInitialize:
             dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
-            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
 
     def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with pre-commit tools selected."""
@@ -76,7 +75,6 @@ class TestInitialize:
             dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
-            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
             assert any(dep.startswith("lefthook>=") for dep in dev_deps)
 
             assert (python_uv_project / "lefthook.yaml").exists()
@@ -107,7 +105,6 @@ class TestInitialize:
             dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
-            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
 
             assert (python_uv_project / ".rules").exists()
             assert (python_uv_project / ".zed").exists()
@@ -153,7 +150,6 @@ class TestInitialize:
             dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
-            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
             assert any(dep.startswith("pre-commit>=") for dep in dev_deps)
 
             assert (python_pip_project / ".pre-commit-config.yaml").exists()
@@ -196,7 +192,6 @@ class TestInitialize:
             dev_deps = pyproject_data.get("dependency-groups", {}).get("dev", [])
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
-            assert any(dep.startswith("ultrapyup>=") for dep in dev_deps)
             assert any(dep.startswith("pre-commit>=") for dep in dev_deps)
 
             assert (python_uv_project / ".pre-commit-config.yaml").exists()
@@ -222,7 +217,7 @@ class TestInitialize:
         assert "vscode" in captured.out  # Editor settings selection logged
         assert "lefthook" in captured.out  # Precommit tools selection logged
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapyup, lefthook" in captured.out
+        assert "ruff, ty, lefthook" in captured.out
         assert "Pre-commit setup completed" in captured.out
         assert "AI rules setup completed" in captured.out
         assert "Editor settings setup completed" in captured.out
@@ -239,13 +234,15 @@ class TestInitialize:
         self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test initialize with empty CLI parameters (skip all optional features)."""
-        result = initialize(package_manager=PackageManager.UV, editor_rules=[], editor_settings=[], precommit_tools=[])
+        result = initialize(
+            package_manager=PackageManager.SKIP, editor_rules=[], editor_settings=[], precommit_tools=[]
+        )
 
         captured = capsys.readouterr()
         assert "uv" in captured.out  # Package manager selection logged
         assert "none" in captured.out  # Should appear 3 times for empty lists
         assert "Dependencies installed" in captured.out
-        assert "ruff, ty, ultrapyup" in captured.out  # Only core dependencies
+        assert "ruff, ty" in captured.out  # Only core dependencies
         assert "Ruff configuration setup completed" in captured.out
         assert "ruff.toml created" in captured.out
         assert "Pre-commit setup completed" not in captured.out
