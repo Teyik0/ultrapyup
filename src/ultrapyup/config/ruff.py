@@ -60,12 +60,11 @@ def ruff_config_setup() -> None:
             "Ruff configuration already exists. Do you want to overwrite it?", choices=["yes", "no"], multiselect=False
         )
         if overwrite == "no":
-            log.info("Keeping existing configuration")
+            log.info("keeping existing configuration")
             return None
-
-    _create_ruff_config()
-    log.title("Ruff configuration setup completed")
-    if ruff_conf_exist:
+        _create_ruff_config()
         log.info("ruff configuration updated")
-
-    log.info("ruff.toml created")
+    else:
+        _create_ruff_config()
+        log.title("Ruff configuration setup completed")
+        log.info("ruff.toml created")

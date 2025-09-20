@@ -9,11 +9,10 @@ from ultrapyup.config.ruff import _create_ruff_config, _ruff_conf_exist, ruff_co
 
 
 def _assert_ruff_conf_already_exist_overwrite_no(captured: CaptureResult[str]) -> None:
-    assert "Keeping existing configuration" in captured.out
+    assert "keeping existing configuration" in captured.out
 
 
 def _assert_ruff_conf_already_exist_overwrite_yes(captured: CaptureResult[str]) -> None:
-    assert "Ruff configuration setup completed" in captured.out
     assert "ruff configuration updated" in captured.out
 
 
