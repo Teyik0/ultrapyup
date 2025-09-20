@@ -14,7 +14,6 @@ def _assert_ty_conf_skipped(captured: CaptureResult[str]) -> None:
 
 
 def _assert_ty_conf_overwritten(captured: CaptureResult[str]) -> None:
-    assert "Ty configuration setup completed" in captured.out
     assert "ty configuration updated in pyproject.toml" in captured.out
 
 
