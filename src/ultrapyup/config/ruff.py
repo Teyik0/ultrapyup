@@ -59,7 +59,7 @@ def ruff_config_setup() -> None:
         overwrite = ask(
             "Ruff configuration already exists. Do you want to overwrite it?", choices=["yes", "no"], multiselect=False
         )
-        if overwrite == "no":
+        if overwrite != "yes":
             log.info("keeping existing configuration")
             return None
         _create_ruff_config()

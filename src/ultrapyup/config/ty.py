@@ -72,7 +72,7 @@ def ty_config_setup(layout: LayoutDetection) -> None:
         overwrite = ask(
             "Ty configuration already exists. Do you want to overwrite it?", choices=["yes", "no"], multiselect=False
         )
-        if overwrite == "no":
+        if overwrite != "yes":
             log.info("Keeping existing configuration")
             return None
         _create_ty_config(layout)
