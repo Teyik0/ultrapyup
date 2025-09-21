@@ -55,7 +55,7 @@ class TestInitialize:
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: no editor rules, no editor settings, lefthook precommit
-            mock_inquirer.return_value.execute.side_effect = [[], [], "Lefthook"]
+            mock_inquirer.return_value.execute.side_effect = [[], [], PreCommitTool.LEFTHOOK.display_name]
 
             result = initialize()
             captured = capsys.readouterr()

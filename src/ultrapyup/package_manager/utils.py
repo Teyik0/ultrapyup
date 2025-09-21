@@ -32,10 +32,10 @@ def install_dependencies(package_manager: PackageManager, precommit_tool: PreCom
     """Install development dependencies using the specified package manager."""
     dev_deps = ["ruff", "ty"]
     if precommit_tool:
-        dev_deps.extend(precommit_tool.value)
+        dev_deps.append(precommit_tool.value)
 
     with console.status("[bold green]Installing dependencies"):
         package_manager.add(dev_deps)
 
         log.title("Dependencies installed")
-        log.info(f"ruff, ty{', ' if precommit_tool else ''}{', '.join(precommit_tool.value) if precommit_tool else ''}")
+        log.info(f"ruff, ty{f', {precommit_tool.value}' if precommit_tool else ''}")
