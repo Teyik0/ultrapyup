@@ -16,26 +16,28 @@ class EditorSetting(str, Enum):
     @property
     def display_name(self) -> str:
         """Get the display name for this editor setting."""
+        if self == EditorSetting.SKIP:
+            raise ValueError("Cannot get display name for SKIP editor setting")
         display_name_map = {
             "vscode": "VSCode",
             "cursor": "Cursor",
             "windsurf": "Windsurf",
             "kiro": "Kiro",
             "zed": "Zed",
-            "skip": "skip",
         }
         return display_name_map[self.value]
 
     @property
     def settings_dir(self) -> str:
         """Get the settings directory for this editor."""
+        if self == EditorSetting.SKIP:
+            raise ValueError("Cannot get settings directory for SKIP editor setting")
         settings_dir_map = {
             "vscode": ".vscode",
             "cursor": ".vscode",
             "windsurf": ".vscode",
             "kiro": ".vscode",
             "zed": ".zed",
-            "skip": "skip",
         }
         return settings_dir_map[self.value]
 

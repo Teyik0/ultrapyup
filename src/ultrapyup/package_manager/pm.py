@@ -16,11 +16,12 @@ class PackageManager(str, Enum):
     @property
     def lockfile(self) -> str | None:
         """Get the lockfile associated with this package manager."""
+        if self == PackageManager.SKIP:
+            raise ValueError("Cannot get lockfile for SKIP package manager")
         lockfile_map = {
             "uv": "uv.lock",
             "poetry": "poetry.lock",
             "pip": None,
-            "skip": None,
         }
         return lockfile_map[self.value]
 
@@ -30,12 +31,15 @@ class PackageManager(str, Enum):
         Args:
             packages: List of package names to install
         """
-        if self == PackageManager.UV:
-            self._add_with_uv(packages)
-        elif self == PackageManager.PIP:
-            self._add_with_pip(packages)
-        elif self == PackageManager.POETRY:
-            self._add_with_poetry(packages)
+        match self:
+            case PackageManager.UV:
+                self._add_with_uv(packages)
+            case PackageManager.PIP:
+                self._add_with_pip(packages)
+            case PackageManager.POETRY:
+                self._add_with_poetry(packages)
+            case PackageManager.SKIP:
+                raise NotImplementedError("Cannot add packages when package manager is set to SKIP")
 
     def _add_with_uv(self, packages: list[str]) -> None:
         """Install packages using uv."""

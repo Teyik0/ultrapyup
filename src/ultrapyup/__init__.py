@@ -58,12 +58,12 @@ def init_command(
             help="Editor settings to configure (vscode, cursor, windsurf, kiro, zed)",
         ),
     ] = None,
-    precommit_tools: Annotated[
-        list[PreCommitTool] | None,
+    precommit_tool: Annotated[
+        PreCommitTool | None,
         typer.Option(
             "--precommit-tools",
             "-pc",
-            help="Pre-commit tools to use (lefthook, pre-commit)",
+            help="Pre-commit tool to use (lefthook, pre-commit)",
         ),
     ] = None,
 ) -> None:
@@ -84,7 +84,7 @@ def init_command(
                 package_manager=package_manager,
                 editor_rules=editor_rules,
                 editor_settings=editor_settings,
-                precommit_tools=precommit_tools,
+                precommit_tool=precommit_tool,
             )
     except Exception as e:
         log.error(f"Initialization failed: {e}")

@@ -51,11 +51,11 @@ class TestInitialize:
             assert any(dep.startswith("ruff>=") for dep in dev_deps)
             assert any(dep.startswith("ty>=") for dep in dev_deps)
 
-    def test_initialize_with_precommit_tools(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_initialize_with_precommit_tool(self, python_uv_project: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """Test initialize with pre-commit tools selected."""
         with patch("InquirerPy.inquirer.select") as mock_inquirer:
             # Set up inquirer mock to return choices: no editor rules, no editor settings, lefthook precommit
-            mock_inquirer.return_value.execute.side_effect = [[], [], ["Lefthook"]]
+            mock_inquirer.return_value.execute.side_effect = [[], [], "Lefthook"]
 
             result = initialize()
             captured = capsys.readouterr()
@@ -207,7 +207,7 @@ class TestInitialize:
             package_manager=PackageManager.UV,
             editor_rules=[EditorRule.ZED_AI, EditorRule.CURSOR_AI],
             editor_settings=[EditorSetting.VSCODE],
-            precommit_tools=[PreCommitTool.LEFTHOOK],
+            precommit_tool=PreCommitTool.LEFTHOOK,
         )
 
         captured = capsys.readouterr()
@@ -235,7 +235,7 @@ class TestInitialize:
     ) -> None:
         """Test initialize with empty CLI parameters (skip all optional features)."""
         result = initialize(
-            package_manager=PackageManager.SKIP, editor_rules=[], editor_settings=[], precommit_tools=[]
+            package_manager=PackageManager.SKIP, editor_rules=[], editor_settings=[], precommit_tool=None
         )
 
         captured = capsys.readouterr()

@@ -4,6 +4,7 @@ from ultrapyup.editor.utils import (
     _editor_rules_ask,
     _editor_settings_ask,
     _vscode_compatible_settings,
+    rule_options,
     setting_options,
 )
 from ultrapyup.utils import log_info_only, log_selection

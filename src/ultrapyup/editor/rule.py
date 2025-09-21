@@ -18,19 +18,22 @@ class EditorRule(str, Enum):
     @property
     def display_name(self) -> str:
         """Get the display name for this editor rule."""
+        if self == EditorRule.SKIP:
+            raise ValueError("Cannot get display name for SKIP editor rule")
         display_name_map = {
             "github-copilot": "GitHub Copilot",
             "cursor-ai": "Cursor AI",
             "windsurf-ai": "Windsurf AI",
             "claude-md": "Claude (CLAUDE.md)",
             "zed-ai": "Zed AI",
-            "skip": "skip",
         }
         return display_name_map[self.value]
 
     @property
     def target_file(self) -> str:
         """Get the target file for this editor rule."""
+        if self == EditorRule.SKIP:
+            raise ValueError("Cannot get target file for SKIP editor rule")
         target_file_map = {
             "github-copilot": ".github/copilot-instructions.md",
             "cursor-ai": ".cursorrules",

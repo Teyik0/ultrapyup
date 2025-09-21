@@ -16,16 +16,19 @@ class PreCommitTool(str, Enum):
     @property
     def display_name(self) -> str:
         """Get the display name for this pre-commit tool."""
+        if self == PreCommitTool.SKIP:
+            raise ValueError("SKIP has no display name")
         display_name_map = {
             "lefthook": "Lefthook",
             "pre-commit": "Pre-commit",
-            "skip": "skip",
         }
         return display_name_map[self.value]
 
     @property
     def filename(self) -> str:
         """Get the config filename for this pre-commit tool."""
+        if self == PreCommitTool.SKIP:
+            raise ValueError("SKIP has no filename")
         filename_map = {
             "lefthook": "lefthook.yaml",
             "pre-commit": ".pre-commit-config.yaml",
@@ -35,6 +38,8 @@ class PreCommitTool(str, Enum):
     @property
     def install_command(self) -> list[str]:
         """Get the install command for this pre-commit tool."""
+        if self == PreCommitTool.SKIP:
+            raise ValueError("SKIP has no install command")
         install_command_map = {
             "lefthook": ["lefthook", "install"],
             "pre-commit": ["pre-commit", "install"],

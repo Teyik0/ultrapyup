@@ -5,7 +5,7 @@ from ultrapyup.precommit import PreCommitTool
 from ultrapyup.utils import ask, console, file_exist, log
 
 
-options: list[PackageManager] = list(PackageManager)
+options: list[PackageManager] = [pm for pm in PackageManager if pm != PackageManager.SKIP]
 
 
 def _package_manager_ask() -> PackageManager:
@@ -28,18 +28,14 @@ def _package_manager_auto_detect() -> PackageManager | None:
     return None
 
 
-def install_dependencies(package_manager: PackageManager, pre_commit_tools: list[PreCommitTool] | None) -> None:
+def install_dependencies(package_manager: PackageManager, precommit_tool: PreCommitTool | None) -> None:
     """Install development dependencies using the specified package manager."""
     dev_deps = ["ruff", "ty"]
-    if pre_commit_tools:
-        dev_deps.extend(precommit_tool.value for precommit_tool in pre_commit_tools)
+    if precommit_tool:
+        dev_deps.extend(precommit_tool.value)
 
     with console.status("[bold green]Installing dependencies"):
         package_manager.add(dev_deps)
 
         log.title("Dependencies installed")
-        log.info(
-            f"ruff, ty{', ' if pre_commit_tools else ''}{
-                ', '.join(precommit_tool.value for precommit_tool in pre_commit_tools) if pre_commit_tools else ''
-            }"
-        )
+        log.info(f"ruff, ty{', ' if precommit_tool else ''}{', '.join(precommit_tool.value) if precommit_tool else ''}")
