@@ -2,7 +2,7 @@ from ultrapyup.precommit.tool import PreCommitTool
 from ultrapyup.utils import ask, log
 
 
-precommit_tools = [tool.display_name for tool in PreCommitTool if tool != PreCommitTool.SKIP]
+precommit_tools = [tool for tool in PreCommitTool if tool != PreCommitTool.SKIP]
 
 
 def _precommit_tools_ask() -> PreCommitTool | None:
@@ -21,7 +21,7 @@ def _precommit_tools_ask() -> PreCommitTool | None:
         return None
 
     for tool in precommit_tools:
-        if tool.value == value:
+        if tool.display_name == value:
             return tool
     raise ValueError(f"Unknown precommit tool: {value}")
 
@@ -43,11 +43,11 @@ def get_precommit_tool(precommit_tool: PreCommitTool | None = None) -> PreCommit
 
     # Handle explicit skip
     if precommit_tool.value == "skip":
-        log.title("Selected pre-commit tools")
+        log.title("Selected pre-commit tool")
         log.info("none")
         return None
 
     # Handle explicit tools provided
-    log.title("Selected pre-commit tools")
+    log.title("Selected pre-commit tool")
     log.info(precommit_tool.value)
     return precommit_tool
