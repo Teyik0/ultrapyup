@@ -119,7 +119,7 @@ class TestInitialize:
                 "pip",
                 ["Zed AI"],
                 ["Zed"],
-                ["Pre-commit"],
+                PreCommitTool.PRE_COMMIT.display_name,
             ]
 
             result = initialize()
@@ -132,7 +132,7 @@ class TestInitialize:
             )  # From migration (may have ANSI codes)
             assert "pip" in captured.out  # Package manager selection logged
             assert "Dependencies installed" in captured.out  # From install_dependencies
-            assert "pre-commit" in captured.out  # Precommit tool in dependencies
+            assert PreCommitTool.PRE_COMMIT.value in captured.out  # Precommit tool in dependencies
             assert "Ruff configuration setup completed" in captured.out  # From ruff_config_setup
             assert "ruff.toml created" in captured.out  # From ruff_config_setup
             assert "Pre-commit setup completed" in captured.out  # From precommit setup
@@ -165,7 +165,7 @@ class TestInitialize:
             mock_inquirer.return_value.execute.side_effect = [
                 ["GitHub Copilot"],
                 ["VSCode"],
-                ["Pre-commit"],
+                PreCommitTool.PRE_COMMIT.display_name,
             ]
 
             result = initialize()
@@ -174,7 +174,7 @@ class TestInitialize:
             assert "Package manager auto detected" in captured.out
             assert "uv" in captured.out
             assert "Dependencies installed" in captured.out
-            assert "pre-commit" in captured.out
+            assert PreCommitTool.PRE_COMMIT.value in captured.out
             assert "Ruff configuration setup completed" in captured.out
             assert "ruff.toml created" in captured.out
             assert "Pre-commit setup completed" in captured.out
@@ -235,7 +235,10 @@ class TestInitialize:
     ) -> None:
         """Test initialize with empty CLI parameters (skip all optional features)."""
         result = initialize(
-            package_manager=PackageManager.SKIP, editor_rules=[], editor_settings=[], precommit_tool=None
+            package_manager=PackageManager.SKIP,
+            editor_rules=[],
+            editor_settings=[],
+            precommit_tool=PreCommitTool.SKIP,
         )
 
         captured = capsys.readouterr()
