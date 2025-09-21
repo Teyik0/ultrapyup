@@ -44,22 +44,11 @@ Automatically manages dependencies, handles virtual environments, and enforces c
 
 ## How It Works (Planned)
 
-Once set up, Ultrapyup will run mostly in the background:
-
 - **Automatic project detection** and intelligent setup
 - **Dependency management** with blazing-fast uv (Rust-powered)
 - **Code formatting** with ruff (Rust-powered)
 - **Type safety** enforced with strict ty rules (Rust-powered)
 - **Import organization** and cleanup
-
-Because uv and ruff are extremely fast, even on large projects, running Ultrapyup's checks will be instantaneous and can comfortably run on every save without lag.
-
-## Current Status
-
-**✅ Available Now:**
-- `ultrapyup init` - Project initialization and detection
-- Basic project structure analysis
-- Package manager detection (pip, uv, poetry, etc.)
 
 ## Why Ultrapyup?
 
@@ -86,7 +75,7 @@ uv run lefthook install
 uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
 
 # Run code quality checks
-uv run ruff check .
+uv run ruff check . --fix
 uv run ty check .
 
 # Format code
@@ -101,7 +90,7 @@ We're in early development and welcome contributions! Whether it's:
 - 📚 Documentation improvements
 - 🧪 Testing and feedback
 
-Please open an issue or submit a PR. Check our [contributing guidelines](CONTRIBUTING.md) for more details.
+Please open an issue or submit a PR. Check our [contributing guidelines](.github/CONTRIBUTING.md) for more details.
 
 ---
 
