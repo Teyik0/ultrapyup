@@ -4,8 +4,6 @@
 
 Ultrapyup is a zero-config Python development framework that provides a robust development experience for your team and your AI integrations. Built on modern Python tooling for lightning-fast performance, it automatically handles project setup, dependency management, and code quality without interrupting your workflow.
 
-> **⚠️ Early Development**: Ultrapyup is in active development. APIs may change and features are being added rapidly. We welcome feedback and contributions!
-
 <div>
     <img src="https://img.shields.io/github/actions/workflow/status/teyik0/ultrapyup/cd.yaml?branch=main" alt="CD Status" />
     <img src="https://img.shields.io/pypi/v/ultrapyup" alt="PyPI Version" />
