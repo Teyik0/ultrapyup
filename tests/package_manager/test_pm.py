@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 import toml
 
-from ultrapyup.initialize import _migrate_requirements_to_pyproject
+from ultrapyup.migrate import _migrate_requirements_to_pyproject
 from ultrapyup.package_manager.pm import PackageManager
 
 
