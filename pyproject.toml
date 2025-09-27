@@ -1,6 +1,6 @@
 [project]
 name = "ultrapyup"
-version = "0.8.0b12"
+version = "0.8.0b13"
 description = "A tool to empower your Python projects"
 readme = "README.md"
 requires-python = ">=3.10"
