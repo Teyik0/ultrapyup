@@ -4,8 +4,6 @@
 
 Ultrapyup is a zero-config Python development framework that provides a robust development experience for your team and your AI integrations. Built on modern Python tooling for lightning-fast performance, it automatically handles project setup, dependency management, and code quality without interrupting your workflow.
 
-> **⚠️ Early Development**: Ultrapyup is in active development. APIs may change and features are being added rapidly. We welcome feedback and contributions!
-
 <div>
     <img src="https://img.shields.io/github/actions/workflow/status/teyik0/ultrapyup/cd.yaml?branch=main" alt="CD Status" />
     <img src="https://img.shields.io/pypi/v/ultrapyup" alt="PyPI Version" />
@@ -20,7 +18,7 @@ Heavily inspired by [Ultracite](https://github.com/haydenbleasel/ultracite), but
 Install and initialize Ultrapyup in your project:
 
 ```sh
-uvx ultrapyup init
+uvx ultrapyup
 ```
 
 That's it! Ultrapyup will automatically detect your project structure and set up modern Python tooling with best practices. No configuration required.
@@ -44,22 +42,11 @@ Automatically manages dependencies, handles virtual environments, and enforces c
 
 ## How It Works (Planned)
 
-Once set up, Ultrapyup will run mostly in the background:
-
 - **Automatic project detection** and intelligent setup
 - **Dependency management** with blazing-fast uv (Rust-powered)
 - **Code formatting** with ruff (Rust-powered)
 - **Type safety** enforced with strict ty rules (Rust-powered)
 - **Import organization** and cleanup
-
-Because uv and ruff are extremely fast, even on large projects, running Ultrapyup's checks will be instantaneous and can comfortably run on every save without lag.
-
-## Current Status
-
-**✅ Available Now:**
-- `ultrapyup init` - Project initialization and detection
-- Basic project structure analysis
-- Package manager detection (pip, uv, poetry, etc.)
 
 ## Why Ultrapyup?
 
@@ -86,7 +73,7 @@ uv run lefthook install
 uv run pytest -n auto tests --cov --cov-report=xml --cov-report=term
 
 # Run code quality checks
-uv run ruff check .
+uv run ruff check . --fix
 uv run ty check .
 
 # Format code
@@ -101,7 +88,7 @@ We're in early development and welcome contributions! Whether it's:
 - 📚 Documentation improvements
 - 🧪 Testing and feedback
 
-Please open an issue or submit a PR. Check our [contributing guidelines](CONTRIBUTING.md) for more details.
+Please open an issue or submit a PR. Check our [contributing guidelines](.github/CONTRIBUTING.md) for more details.
 
 ---
 

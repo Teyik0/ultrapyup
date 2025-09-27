@@ -1,0 +1,8 @@
+extend = "src/ultrapyup/resources/ruff.toml"
+
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",    # Allow assert statements
+    "PLR2004", # Allow magic values in tests
+    "SLF001",  # Allow private member access
+]

@@ -25,13 +25,13 @@ class TestCheckPythonProject:
 
         assert result is True
 
-    def test_with_requirements_txt(self, project_with_requirements: Path) -> None:
+    def test_with_requirements_txt(self, python_pip_project: Path) -> None:
         """Test when requirements.txt exists."""
         result = _check_python_project()
 
         assert result is True
 
-        requirements_txt = project_with_requirements / "requirements.txt"
+        requirements_txt = python_pip_project / "requirements.txt"
         assert requirements_txt.exists()
 
         content = requirements_txt.read_text()

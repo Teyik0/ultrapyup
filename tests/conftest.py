@@ -69,7 +69,7 @@ def python_empty_project(project_dir: Path) -> Path:
 
 
 @pytest.fixture
-def project_with_requirements(python_empty_project: Path) -> Path:
+def python_pip_project(python_empty_project: Path) -> Path:
     """Create a project with requirements.txt."""
     requirements_content = """# Test requirements
 requests==2.31.0
@@ -87,7 +87,7 @@ ruff>=0.1.0
 
 
 @pytest.fixture
-def poetry_project(python_uv_project: Path) -> Path:
+def python_poetry_project(python_uv_project: Path) -> Path:
     """Create a Python project using uv project fixture, then delete uv.lock and run poetry sync."""
     venv_path = python_uv_project / ".venv"
     if venv_path.exists():
@@ -126,9 +126,9 @@ def poetry_project(python_uv_project: Path) -> Path:
 
 
 @pytest.fixture
-def project_with_ruff_config(project_with_pyproject: Path) -> Path:
+def project_with_ruff_config(python_uv_project: Path) -> Path:
     """Create a project with existing Ruff configuration in pyproject.toml."""
-    pyproject_path = project_with_pyproject / "pyproject.toml"
+    pyproject_path = python_uv_project / "pyproject.toml"
     pyproject_content = pyproject_path.read_text()
 
     # Add [tool.ruff] and [tool.ruff.lint] sections to the end
@@ -144,7 +144,7 @@ ignore = ["E501"]
     pyproject_path.write_text(pyproject_content + "\n" + ruff_config)
 
     # Create .venv with proper structure
-    venv_path = project_with_pyproject / ".venv"
+    venv_path = python_uv_project / ".venv"
     lib_path = venv_path / "lib" / "python3.11"
     site_packages = lib_path / "site-packages"
     site_packages.mkdir(parents=True)
@@ -164,7 +164,7 @@ select = ["E", "F", "I"]
 """
     (resources_path / "ruff_base.toml").write_text(ruff_base_content)
 
-    return project_with_pyproject
+    return python_uv_project
 
 
 @pytest.fixture
